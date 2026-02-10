@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+*.swo
+*~
+
+# IDE and Editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.env.local
+
+# OS
+Thumbs.db
+
+# Node (if used for any tooling)
+node_modules/
+npm-debug.log*
+
+# Python (if used for any scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary files
+*.tmp
+.temporary
+
+# local Claude Code settings
+settings.local.json
