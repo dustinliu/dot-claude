@@ -2,11 +2,8 @@
 
 ## Metadata
 
-- **Author(s)**: [Your name]
-- **Status**: Draft | In Review | Approved | Implemented
 - **Created**: [YYYY-MM-DD]
 - **Last Updated**: [YYYY-MM-DD]
-- **Reviewers**: [Key stakeholders]
 
 ## Summary
 
@@ -14,36 +11,21 @@
 
 ---
 
-## 1. Problem Statement
-
-### Background
-[Describe the current situation and context]
-
-### Problem
-[What specific problem are we solving? Why is it important?]
-
-### Goals
-- Goal 1
-- Goal 2
-- Goal 3
-
-### Non-Goals
-[What are we explicitly NOT doing in this iteration?]
-
-### Success Metrics
-- Metric 1: [e.g., Response time < 200ms for 95th percentile]
-- Metric 2: [e.g., Support 1000 concurrent users]
-
----
-
-## 2. Proposed Solution
+## Proposed Solution
 
 ### High-Level Architecture
 
 [Provide a system diagram showing major components and data flow]
 
-```
-[Diagram - use Mermaid, PlantUML, or ASCII art]
+```mermaid
+flowchart TD
+    Client[Client / Frontend] -->|REST API| Gateway[API Gateway]
+    Gateway --> ServiceA[Service A]
+    Gateway --> ServiceB[Service B]
+    ServiceA --> DB[(Database)]
+    ServiceB --> Queue[[Message Queue]]
+    Queue --> Worker[Background Worker]
+    Worker --> DB
 ```
 
 **Key Components**:
@@ -51,23 +33,31 @@
 - **Component B**: [Brief description]
 
 **Data Flow**:
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant API as API Server
+    participant DB as Database
+    participant Cache as Cache Layer
+
+    User->>API: Send Request
+    API->>Cache: Check Cache
+    alt Cache Hit
+        Cache-->>API: Return Cached Data
+    else Cache Miss
+        API->>DB: Query Data
+        DB-->>API: Return Result
+        API->>Cache: Update Cache
+    end
+    API-->>User: Return Response
+```
 
 ### API Design
 
 [Choose REST, GraphQL, or gRPC based on your needs]
 
-**For REST APIs**:
-```
-GET    /api/v1/resources/{id}
-POST   /api/v1/resources
-PUT    /api/v1/resources/{id}
-DELETE /api/v1/resources/{id}
-
-Request/Response schemas: [Brief description or link to OpenAPI spec]
-```
+**For REST APIs**: Use [OpenAPI 3.x](https://spec.openapis.org/oas/latest.html) specification. Define the API contract in a separate file (e.g., `openapi.yaml`).
 
 **For GraphQL**:
 ```graphql
@@ -108,7 +98,38 @@ CREATE TABLE resources (
 CREATE INDEX idx_resources_name ON resources(name);
 ```
 
-**Entity Relationships**: [Brief description or ER diagram]
+**Entity Relationships**:
+
+```mermaid
+erDiagram
+    User ||--o{ Order : places
+    Order ||--|{ OrderItem : contains
+    OrderItem }o--|| Product : references
+
+    User {
+        uuid id PK
+        string name
+        string email
+        timestamp created_at
+    }
+    Order {
+        uuid id PK
+        uuid user_id FK
+        string status
+        timestamp created_at
+    }
+    OrderItem {
+        uuid id PK
+        uuid order_id FK
+        uuid product_id FK
+        int quantity
+    }
+    Product {
+        uuid id PK
+        string name
+        decimal price
+    }
+```
 
 ### Security & Authentication
 
@@ -128,33 +149,8 @@ CREATE INDEX idx_resources_name ON resources(name);
 
 ---
 
-## 3. Implementation Plan
 
-### Phase 1: Foundation
-- [ ] Database schema setup
-- [ ] Basic API endpoints
-- [ ] Authentication scaffolding
-
-**Timeline**: [Estimate]
-
-### Phase 2: Core Features
-- [ ] Business logic implementation
-- [ ] Validation and error handling
-- [ ] Unit and integration tests
-
-**Timeline**: [Estimate]
-
-### Phase 3: Polish & Launch
-- [ ] Performance optimization
-- [ ] Documentation
-- [ ] Monitoring and alerts
-- [ ] Load testing
-
-**Timeline**: [Estimate]
-
----
-
-## 4. Testing Strategy
+## Testing Strategy
 
 ### Unit Tests
 - Coverage goal: [e.g., 80% for business logic]
@@ -175,7 +171,7 @@ CREATE INDEX idx_resources_name ON resources(name);
 
 ---
 
-## 5. Alternatives Considered
+## Alternatives Considered
 
 ### Alternative 1: [Name]
 **Pros**:
@@ -190,24 +186,19 @@ CREATE INDEX idx_resources_name ON resources(name);
 
 ---
 
-## 6. Open Questions
+## Open Questions
 
 - [ ] **Q1**: [Question that needs discussion]
 - [ ] **Q2**: [Another unresolved issue]
 
 ---
 
-## 7. References
+## References
 
-- [Related EDD: Link]
+- [Related PRD: Link]
 - [External documentation: Link]
 - [Research or blog post: Link]
+- ...
 
 ---
 
-## 8. Review History
-
-| Date       | Reviewer | Status   | Comments           |
-| ---------- | -------- | -------- | ------------------ |
-| YYYY-MM-DD | [Name]   | Reviewed | [Feedback summary] |
-| YYYY-MM-DD | [Name]   | Approved | Ready for impl     |

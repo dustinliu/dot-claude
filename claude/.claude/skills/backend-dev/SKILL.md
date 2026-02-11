@@ -48,7 +48,7 @@ Initial request: $ARGUMENTS
 **Actions**:
 1. **Read EDD and codebase documents first** — These are your main sources of truth for architecture, design decisions, and codebase structure. Extract as much understanding as possible from them before touching any source code.
 2. **Identify remaining gaps** — After reading the documents, explicitly list what is still unclear or missing. Only proceed to code exploration if there are concrete, specific questions that the documents cannot answer.
-3. **Targeted code exploration (only if necessary)** — If gaps remain, launch 1-2 code-explorer agents with narrow, focused prompts to read the relevant code. Each agent should:
+3. **Targeted code exploration (only if necessary)** — If gaps remain, launch 1-3 code-explorer agents with narrow, focused prompts to read the relevant code. Each agent should:
    - Target a specific question or aspect, not a general survey
    - Only read files directly relevant to the feature — do NOT broad-scan directories or read files "just in case"
    - Return a list of 5-10 key files to read
@@ -83,7 +83,7 @@ If the user says "whatever you think is best", provide your recommendation and g
 **Goal**: Design multiple implementation approaches with different trade-offs
 
 **Actions**:
-1. Launch 2-3 code-architect agents in parallel with different focuses: minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality)
+1. Launch 1-3 code-architect agents in parallel with different focuses: minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality)
 2. Review all approaches and form your opinion on which fits best for this specific task (consider: small fix vs large feature, urgency, complexity, team context)
 3. Present to user: brief summary of each approach, trade-offs comparison, **your recommendation with reasoning**, concrete implementation differences
 4. **Ask user which approach they prefer**
@@ -125,7 +125,7 @@ If the user says "whatever you think is best", provide your recommendation and g
 
 **Actions**:
 1. Mark all todos complete
-2. Update the EDD and codebase documents with the new information
+2. Create or update the EDD and codebase documents with the new information. When creating a new EDD, use `assets/edd-template.md` as the starting template. When creating a new codebase document, use `assets/codebase-template.md` as the starting template.
 3. Summarize:
    - What was built
    - Key decisions made
