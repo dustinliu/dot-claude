@@ -9,6 +9,11 @@
 # IDE and Editor
 .vscode/
 .idea/
+.cursor/
+
+# AI Agent configs (local only)
+/.agents/
+/.claude/
 *.sublime-project
 *.sublime-workspace
 .env.local

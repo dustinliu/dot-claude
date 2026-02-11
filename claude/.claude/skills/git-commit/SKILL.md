@@ -123,6 +123,22 @@ EOF
 - Reference issues: `Closes #123`, `Refs #456`
 - Keep description under 72 characters
 
+## Workflow - Interactive Confirmation
+
+### Critical Steps Before Execution
+
+1. **Before staging files (`git add`)**:
+   - List all files/changes intended to be staged
+   - Wait for user confirmation before executing `git add`
+   - Never stage files without explicit user approval
+
+2. **Before committing (`git commit`)**:
+   - Display the complete commit command to be executed
+   - Wait for user confirmation before executing `git commit`
+   - Never commit without explicit user approval
+
+This ensures the user has full control and visibility over all git operations.
+
 ## Git Safety Protocol
 
 - NEVER update git config

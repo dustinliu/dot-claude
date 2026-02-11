@@ -9,6 +9,15 @@
 
 - Source code 及 comments 一律使用英文
 
+## 🔍 Code Navigation & Search
+
+- 探索或搜尋程式碼時，優先使用 LSP（Go to Definition, Find References, etc.）以提高效率
+- 只有在 LSP 無法使用的情況下，才退而使用 grep、ripgrep 等文字搜尋方式
+
 ## 📚 Documentation & Research
 
 - LLM 內建的知識可能已過時，查詢 API 或 library 文件時，優先使用 context7 MCP 取得最新文件, 若 context7 找不到相關資料，再使用 web search 作為備案
+
+## 🔄 Git Workflow
+
+- 不要自動執行 `git add` 或 `git commit`，除非我有明確要求
