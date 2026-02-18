@@ -1,6 +1,6 @@
 ## 📢 Communication
 
-- 使用中文時以繁體中文為優先
+- 使用中文時**以繁體中文為優先**
 - 永遠用中文跟我對話
 - 電腦領域相關的術語，都使用英文表達
 - 對我的提問或要求如果有任何不清楚的地方，請先詢問我以釐清細節，再進行回答，不要直接假設我的需求
@@ -9,10 +9,24 @@
 
 - Source code 及 comments 一律使用英文
 
-## 🔍 Code Navigation & Search
+## 🔍 Code Navigation & Understanding
 
-- 探索或搜尋程式碼時，優先使用 LSP（Go to Definition, Find References, etc.）以提高效率
-- 只有在 LSP 無法使用的情況下，才退而使用 grep、ripgrep 等文字搜尋方式
+優先使用 LSP 功能進行代碼導航、理解和診斷。只有在 LSP 無法滿足時，才退而使用文字搜尋工具。
+
+### LSP 功能應用場景
+
+Claude Code 支援以下 LSP 功能（需要安裝對應語言的 LSP plugin）：
+
+| 功能 | 使用時機 |
+|------|--------|
+| **Go to Definition** | 需要查看某個 function、class、variable 的定義位置 |
+| **Find References** | 需要了解某個 symbol 在哪些地方被使用 |
+| **Find Implementations** | 需要找到 interface 或 abstract class 的所有實現 |
+| **Hover** | 需要查看變數、參數的型別資訊或 function 的文件 |
+| **List Symbols** | 需要查看檔案或 workspace 中的所有 symbol 列表 |
+| **Trace Call Hierarchies** | 需要追蹤 function 的呼叫鏈或被呼叫關係 |
+| **Automatic Diagnostics** | 每次編輯後自動檢查語法錯誤、型別錯誤或 linter 警告 |
+
 
 ## 📚 Documentation & Research
 
