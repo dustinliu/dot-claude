@@ -1,67 +1,38 @@
 # dot-claude
 
-## Project Overview
+User manual for Claude Code configurations. Use this repo to install, update, and manage your Claude Code agents and skills.
 
-`dot-claude` is a repository for maintaining and documenting Claude Code configurations and guidance files. It serves as a centralized source for:
+## What you get
 
 - **Agents** — role-specific prompts (e.g. code-explorer, code-architect, code-reviewer)
-- **Skills** — reusable task instructions and templates (e.g. git-commit)
-- **CLAUDE.md** — workspace rules and conventions under `claude/`
+- **Skills** — reusable task instructions (e.g. git-commit)
+- **Rules** — workspace conventions Claude Code follows
 
-The `claude/` tree is deployed by **copying** to `~/.claude/` via a Python script (Stow-like merge: only paths present in the repo are touched; files like `settings.local.json` in the target are left alone).
+The `claude/` tree in this repo is **deployed** to `~/.claude/`. Claude Code reads from `~/.claude/`, not from this repo. Deploy after cloning or pulling to apply changes.
 
-## Directory Structure
+## Quick start
 
-```
-.
-├── claude/                           # Deployed via script → ~/.claude
-│   ├── CLAUDE.md                     # Workspace rules for Claude Code
-│   ├── agents/                       # code-explorer, code-architect, code-reviewer, etc.
-│   └── skills/                       # e.g. git-commit/
-├── scripts/
-│   └── deploy.py                     # Deploy/undeploy script
-├── .editorconfig
-├── .gitignore
-├── .python-version
-├── CLAUDE.md                         # Root workspace rules (references README)
-├── LICENSE
-├── README.md
-├── pyproject.toml                    # Python deps and deploy entry point
-└── uv.lock
-```
+1. Clone the repo (or ensure it’s up to date).
+2. From the repo root, run:
+   ```bash
+   uv run deploy
+   ```
+   This copies the `claude/` tree into `~/.claude/` (merge only: your existing files there, e.g. `settings.local.json`, are kept).
 
-## Deployment
+## Deployment commands
 
-Run the deploy script from the repo root. It **copies** the `claude/` tree into `~/.claude/` (merge only: existing files in the target that are not in the repo, e.g. `settings.local.json`, are preserved).
-
-### Commands
-
-```bash
-# Deploy to ~/.claude (default)
-uv run deploy
-
-# Deploy to a custom directory (DIR/.claude)
-uv run deploy --target /path/to/home
-# or set DOT_CLAUDE_HOME
-
-# Preview changes without writing
-uv run deploy --dry-run
-
-# After copy, remove from target any path that no longer exists in the repo (sync)
-uv run deploy --sync
-
-# Remove only repo-managed paths from the target (keeps e.g. settings.local.json)
-uv run deploy --undeploy
-```
+| Command | Description |
+|--------|-------------|
+| `uv run deploy` | Deploy to `~/.claude` (default home) |
+| `uv run deploy --target /path/to/home` | Deploy so that files go to `DIR/.claude` (or set `DOT_CLAUDE_HOME`) |
+| `uv run deploy --dry-run` | Show what would be copied, no writes |
+| `uv run deploy --sync` | After copy, remove from target any path that no longer exists in the repo |
+| `uv run deploy --undeploy` | Remove only repo-managed paths from the target (keeps e.g. `settings.local.json`) |
 
 If the target has a **file** where the repo has a **directory** (or the reverse), the script reports a conflict and exits unless you pass `--force`.
 
-## Development
+## Requirements
 
-After changing Python code, run [Ruff](https://docs.astral.sh/ruff/) (format first, then check):
+- [uv](https://docs.astral.sh/uv/) (Python package runner). The project uses `pyproject.toml` and runs the deploy script via `uv run deploy`.
 
-```bash
-uv run ruff format scripts/
-uv run ruff check scripts/
-```
-
+For development and contributing, see **CLAUDE.md** in this repo.

@@ -84,6 +84,13 @@ def do_copy(
         if dry_run:
             print(f"  copy {rel}")
             continue
+        # Remove any symlinks in the path (e.g. leftover Stow symlinks) that
+        # would block directory creation or file overwrite.
+        current = dest
+        for part in rel.parts:
+            current = current / part
+            if current.is_symlink():
+                current.unlink()
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src_path, dest_path)
 
