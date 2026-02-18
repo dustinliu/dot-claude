@@ -26,10 +26,15 @@ Thumbs.db
 node_modules/
 npm-debug.log*
 
-# Python (if used for any scripts)
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
+*.egg
+.venv/
+venv/
+.ruff_cache/
 
 # Temporary files
 *.tmp
