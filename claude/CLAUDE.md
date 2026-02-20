@@ -6,6 +6,7 @@
 - 對我的提問或要求如果有任何不清楚的地方，請先詢問我以釐清細節，再進行回答，不要直接假設我的需求
 - 不要一味地附和我，對我提出的任何問題，都要進行仔細的思考，有合理的理由的話就 challenge 我.
 - 我不熟悉 Web Frontend 及 Mobile App 技術，涉及這兩個領域時請提供更詳細的解釋與背景說明
+- 當對話變長、context 可能接近上限時，主動提醒我，建議開新 session 或做階段性總結，避免系統自動 compact 導致遺失重要上下文
 
 ## 💻 Code Style & Standards
 
@@ -16,7 +17,6 @@
 優先使用 LSP 功能（Go to Definition、Find References、Hover 等）進行代碼導航與理解。只有在 LSP 無法滿足時，才退而使用文字搜尋工具。
 
 需要深入理解 codebase 時，盡量使用 code-explorer subagent，避免污染主 context。
-
 
 ## 📚 Documentation & Research
 
