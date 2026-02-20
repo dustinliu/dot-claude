@@ -18,8 +18,8 @@ Changes only take effect after deployment.
 .
 ├── claude/                           # Deployed → ~/.claude
 │   ├── CLAUDE.md                     # Workspace rules for Claude Code
-│   ├── agents/                       # code-explorer, code-architect, code-reviewer, etc.
-│   └── skills/                       # e.g. git-commit/
+│   ├── agents/                       # claude code subagents
+│   └── skills/                       # claude code skills
 ├── scripts/
 │   └── deploy.py                     # Deploy/undeploy script
 ├── .editorconfig
