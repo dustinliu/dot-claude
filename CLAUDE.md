@@ -29,6 +29,7 @@ Changes only take effect after deployment.
 ├── LICENSE
 ├── README.md                         # User manual
 ├── pyproject.toml                    # Python deps, uv run deploy
+├── skills-lock.json                  # Tracks external skills (gitignored)
 └── uv.lock
 ```
 
@@ -41,6 +42,15 @@ Changes only take effect after deployment.
    uv run ruff format scripts/
    uv run ruff check scripts/
    ```
+4. Run tests: `uv run pytest`
+5. after git commit, run deploy
+
+## External skills (`skills-lock.json`)
+
+`skills-lock.json` is maintained by `npx skills` (the skills CLI) to track externally sourced skills installed from GitHub (e.g. `obra/superpowers`). It records each skill's source repo, type, and content hash so the CLI can detect updates.
+
+- **Not checked in** — the file is gitignored since it varies per machine.
+- **Do not edit manually** — use `npx skills` to add, update, or remove external skills.
 
 ## User-facing docs
 
