@@ -8,142 +8,34 @@ model: sonnet
 
 # Git Commit with Conventional Commits
 
-## Overview
-
-Create standardized, semantic git commits using the Conventional Commits specification. Analyze the actual diff to determine appropriate type, scope, and message.
-
-## Conventional Commit Format
-
-```
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-## Commit Types
-
-| Type       | Purpose                        |
-| ---------- | ------------------------------ |
-| `feat`     | New feature                    |
-| `fix`      | Bug fix                        |
-| `docs`     | Documentation only             |
-| `style`    | Formatting/style (no logic)    |
-| `refactor` | Code refactor (no feature/fix) |
-| `perf`     | Performance improvement        |
-| `test`     | Add/update tests               |
-| `build`    | Build system/dependencies      |
-| `ci`       | CI/config changes              |
-| `chore`    | Maintenance/misc               |
-| `revert`   | Revert commit                  |
-
-## Breaking Changes
-
-```
-# Exclamation mark after type/scope
-feat!: remove deprecated endpoint
-
-# BREAKING CHANGE footer
-feat: allow config to extend other configs
-
-BREAKING CHANGE: `extends` key behavior changed
-```
+Create standardized git commits using Conventional Commits. Analyze the diff and follow the interactive confirmation workflow below.
 
 ## Workflow
 
-### 1. Analyze Diff
+1. **Analyze**: Run `git diff --staged` (or `git diff` if nothing staged) and `git status --porcelain`
+2. **Stage**: Propose files to stage — **wait for user confirmation** before running `git add`
+3. **Draft**: Generate commit message from the diff (type, scope, description)
+4. **Commit**: Show the full commit command — **wait for user confirmation** before executing
 
-```bash
-# If files are staged, use staged diff
-git diff --staged
+## Grouping Changes
 
-# If nothing staged, use working tree diff
-git diff
+If the diff contains multiple unrelated changes, propose splitting into separate commits:
 
-# Also check status
-git status --porcelain
-```
-
-### 2. Stage Files (if needed)
-
-If nothing is staged or you want to group changes differently:
-
-```bash
-# Stage specific files
-git add path/to/file1 path/to/file2
-
-# Stage by pattern
-git add *.test.*
-git add src/components/*
-
-# Interactive staging
-git add -p
-```
-
-**Never commit secrets** (.env, credentials.json, private keys).
-
-### 3. Generate Commit Message
-
-Analyze the diff to determine:
-
-- **Type**: What kind of change is this?
-- **Scope**: What area/module is affected?
-- **Description**: One-line summary of what changed (present tense, imperative mood, <72 chars)
-
-### 4. Execute Commit
-
-```bash
-# Single line
-git commit -m "<type>[scope]: <description>"
-
-# Multi-line with body/footer and Co-Authored-By
-git commit -m "$(cat <<'EOF'
-<type>[scope]: <description>
-
-<optional body>
-
-<optional footer>
-
-Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
-EOF
-)"
-```
-
-**Note**: Replace agent name based on current context:
-- Claude Opus 4.6 → `Co-Authored-By: Claude Opus`
-- Claude Sonnet 4.5 → `Co-Authored-By: Claude Sonnet`
-- Claude Haiku 4.5 → `Co-Authored-By: Claude Haiku`
-- Cursor AI → `Co-Authored-By: Cursor AI`
-
-## Best Practices
-
+- Stage specific files per logical group: `git add path/to/file1 path/to/file2`
+- Use `git add -p` for partial file staging
 - One logical change per commit
-- Present tense: "add" not "added"
-- Imperative mood: "fix bug" not "fixes bug"
-- Reference issues: `Closes #123`, `Refs #456`
-- Keep description under 72 characters
 
-## Workflow - Interactive Confirmation
+## Interactive Confirmation (Required)
 
-### Critical Steps Before Execution
+- Before `git add`: list intended files and wait for approval
+- Before `git commit`: display the full command and wait for approval
 
-1. **Before staging files (`git add`)**:
-   - List all files/changes intended to be staged
-   - Wait for user confirmation before executing `git add`
-   - Never stage files without explicit user approval
+Never stage or commit without explicit user approval.
 
-2. **Before committing (`git commit`)**:
-   - Display the complete commit command to be executed
-   - Wait for user confirmation before executing `git commit`
-   - Never commit without explicit user approval
+## Co-Authored-By
 
-This ensures the user has full control and visibility over all git operations.
+Include in the commit footer using the current agent name and model name:
 
-## Git Safety Protocol
-
-- NEVER update git config
-- NEVER run destructive commands (--force, hard reset) without explicit request
-- NEVER skip hooks (--no-verify) unless user asks
-- NEVER force push to main/master
-- If commit fails due to hooks, fix and create NEW commit (don't amend)
+```
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+```
