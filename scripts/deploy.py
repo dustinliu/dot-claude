@@ -53,7 +53,6 @@ def check_conflicts(
     dest: Path,
     source_files: set[Path],
     source_dirs: set[Path],
-    force: bool,
 ) -> list[Path]:
     """Check for file/dir type conflicts. Returns list of conflicting relative paths."""
     conflicts: list[Path] = []
@@ -66,9 +65,7 @@ def check_conflicts(
         dest_is_file = dest_path.is_file()
         if src_is_file != dest_is_file:
             conflicts.append(rel)
-    if conflicts and not force:
-        return conflicts
-    return []
+    return conflicts
 
 
 def do_copy(
@@ -110,10 +107,7 @@ def do_sync(
         if not dest_d.is_dir():
             continue
         for entry in list(dest_d.iterdir()):
-            if d == Path("."):
-                rel = Path(entry.name)
-            else:
-                rel = d / entry.name
+            rel = d / entry.name
             if rel in owned:
                 continue
             # Check if any owned path is under rel (e.g. rel is "skills", we have "skills/git-commit")
@@ -209,7 +203,7 @@ def main() -> None:
         return
 
     # Deploy path: conflict check -> copy -> optional sync
-    conflicts = check_conflicts(dest, source_files, source_dirs, args.force)
+    conflicts = check_conflicts(dest, source_files, source_dirs)
     if conflicts:
         print("Conflicts (target type differs from source):", file=sys.stderr)
         for c in conflicts:
@@ -217,6 +211,7 @@ def main() -> None:
         if not args.force:
             print("Use --force to overwrite.", file=sys.stderr)
             sys.exit(1)
+        print("Overwriting conflicting paths (--force).", file=sys.stderr)
 
     if args.dry_run:
         print("Deploy (dry-run):")
