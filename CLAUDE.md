@@ -8,7 +8,7 @@ Development and maintenance repository for Claude Code configurations. This file
 
 - This repo is the **source** — develop and maintain agents, skills, and rules here.
 - Run `uv run deploy` to copy the `claude/` tree to `~/.claude/`.
-- Claude Code reads from `~/.claude/` (the deployed location).
+- Claude Code reads from `~/.claude/` or `./.claude/`(the deployed location).
 
 Changes only take effect after deployment.
 
