@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-import os
+import json
 from pathlib import Path
-
-import pytest
 
 from scripts.deploy import (
     check_conflicts,
+    do_cleanup,
     do_copy,
-    do_sync,
-    do_undeploy,
     enumerate_source,
+    read_manifest,
+    write_manifest,
 )
 
 
@@ -124,21 +123,6 @@ class TestDoCopy:
         do_copy(src, dest, {Path("d1/d2/f.txt")}, dry_run=False)
         assert (dest / "d1" / "d2" / "f.txt").read_text() == "deep"
 
-    def test_removes_symlink_in_path(self, tmp_path: Path):
-        src = tmp_path / "src"
-        (src / "sub").mkdir(parents=True)
-        (src / "sub" / "f.txt").write_text("real")
-        dest = tmp_path / "dest"
-        dest.mkdir()
-        # Create a symlink where a directory should be
-        target = tmp_path / "elsewhere"
-        target.mkdir()
-        os.symlink(target, dest / "sub")
-
-        do_copy(src, dest, {Path("sub/f.txt")}, dry_run=False)
-        assert not (dest / "sub").is_symlink()
-        assert (dest / "sub" / "f.txt").read_text() == "real"
-
     def test_dry_run_does_not_write(self, tmp_path: Path):
         src = tmp_path / "src"
         src.mkdir()
@@ -151,114 +135,162 @@ class TestDoCopy:
 
 
 # ---------------------------------------------------------------------------
-# do_sync
+# write_manifest / read_manifest
 # ---------------------------------------------------------------------------
 
 
-class TestDoSync:
+class TestManifest:
+    def test_write_manifest_creates_file(self, tmp_path: Path):
+        files = {Path("a.txt"), Path("sub/b.txt")}
+        write_manifest(tmp_path, files)
+        manifest_path = tmp_path / ".deploy-manifest.json"
+        assert manifest_path.exists()
+        data = json.loads(manifest_path.read_text())
+        assert sorted(data["files"]) == ["a.txt", "sub/b.txt"]
+
+    def test_write_manifest_overwrites_existing(self, tmp_path: Path):
+        write_manifest(tmp_path, {Path("old.txt")})
+        write_manifest(tmp_path, {Path("new.txt")})
+        data = json.loads((tmp_path / ".deploy-manifest.json").read_text())
+        assert data["files"] == ["new.txt"]
+
+    def test_read_manifest_returns_files(self, tmp_path: Path):
+        manifest = {"files": ["a.txt", "sub/b.txt"]}
+        (tmp_path / ".deploy-manifest.json").write_text(json.dumps(manifest))
+        result = read_manifest(tmp_path)
+        assert result == {Path("a.txt"), Path("sub/b.txt")}
+
+    def test_read_manifest_returns_empty_when_missing(self, tmp_path: Path):
+        result = read_manifest(tmp_path)
+        assert result == set()
+
+
+# ---------------------------------------------------------------------------
+# do_cleanup
+# ---------------------------------------------------------------------------
+
+
+class TestDoCleanup:
     def test_removes_stale_file(self, tmp_path: Path):
         dest = tmp_path / "dest"
-        (dest / "sub").mkdir(parents=True)
-        (dest / "sub" / "keep.txt").write_text("keep")
-        (dest / "sub" / "stale.txt").write_text("stale")
+        dest.mkdir()
+        (dest / "skills" / "old-skill").mkdir(parents=True)
+        (dest / "skills" / "old-skill" / "SKILL.md").write_text("old")
 
-        source_files = {Path("sub/keep.txt")}
-        source_dirs = {Path("sub")}
-        do_sync(dest, source_files, source_dirs, dry_run=False)
+        previous = {Path("skills/old-skill/SKILL.md")}
+        current = set()
+        do_cleanup(dest, previous, current, dry_run=False)
 
-        assert (dest / "sub" / "keep.txt").exists()
-        assert not (dest / "sub" / "stale.txt").exists()
+        assert not (dest / "skills" / "old-skill" / "SKILL.md").exists()
 
-    def test_removes_stale_dir(self, tmp_path: Path):
-        dest = tmp_path / "dest"
-        (dest / "sub").mkdir(parents=True)
-        (dest / "sub" / "old_dir").mkdir()
-        (dest / "sub" / "old_dir" / "f.txt").write_text("gone")
-
-        source_files: set[Path] = set()
-        source_dirs = {Path("sub")}
-        do_sync(dest, source_files, source_dirs, dry_run=False)
-
-        assert not (dest / "sub" / "old_dir").exists()
-
-    def test_preserves_owned_paths(self, tmp_path: Path):
-        dest = tmp_path / "dest"
-        (dest / "sub").mkdir(parents=True)
-        (dest / "sub" / "a.txt").write_text("a")
-        (dest / "sub" / "b.txt").write_text("b")
-
-        source_files = {Path("sub/a.txt"), Path("sub/b.txt")}
-        source_dirs = {Path("sub")}
-        do_sync(dest, source_files, source_dirs, dry_run=False)
-
-        assert (dest / "sub" / "a.txt").exists()
-        assert (dest / "sub" / "b.txt").exists()
-
-    def test_preserves_dir_with_owned_children(self, tmp_path: Path):
-        """A dir not in source_dirs but containing owned files should be kept."""
-        dest = tmp_path / "dest"
-        (dest / "parent" / "child").mkdir(parents=True)
-        (dest / "parent" / "child" / "f.txt").write_text("owned")
-
-        source_files = {Path("parent/child/f.txt")}
-        source_dirs = {Path("parent"), Path("parent/child")}
-        do_sync(dest, source_files, source_dirs, dry_run=False)
-
-        assert (dest / "parent" / "child" / "f.txt").exists()
-
-    def test_dry_run_does_not_delete(self, tmp_path: Path):
-        dest = tmp_path / "dest"
-        (dest / "sub").mkdir(parents=True)
-        (dest / "sub" / "stale.txt").write_text("stale")
-
-        source_dirs = {Path("sub")}
-        do_sync(dest, set(), source_dirs, dry_run=True)
-
-        assert (dest / "sub" / "stale.txt").exists()
-
-    def test_skips_nonexistent_dest_dir(self, tmp_path: Path):
+    def test_removes_empty_dir_after_cleanup(self, tmp_path: Path):
         dest = tmp_path / "dest"
         dest.mkdir()
-        # source_dirs references a dir that doesn't exist in dest — should not error
-        do_sync(dest, set(), {Path("nonexistent")}, dry_run=False)
+        (dest / "skills" / "old-skill").mkdir(parents=True)
+        (dest / "skills" / "old-skill" / "SKILL.md").write_text("old")
 
+        previous = {Path("skills/old-skill/SKILL.md")}
+        current = set()
+        do_cleanup(dest, previous, current, dry_run=False)
 
-# ---------------------------------------------------------------------------
-# do_undeploy
-# ---------------------------------------------------------------------------
+        assert not (dest / "skills" / "old-skill").exists()
 
-
-class TestDoUndeploy:
-    def test_removes_source_owned_files(self, tmp_path: Path):
+    def test_preserves_unmanaged_files(self, tmp_path: Path):
         dest = tmp_path / "dest"
         dest.mkdir()
-        (dest / "a.txt").write_text("a")
-        (dest / "b.txt").write_text("b")
+        (dest / "settings.local.json").write_text("{}")
+        (dest / "skills" / "external-skill").mkdir(parents=True)
+        (dest / "skills" / "external-skill" / "SKILL.md").write_text("ext")
 
-        do_undeploy(dest, {Path("a.txt")}, set(), dry_run=False)
-        assert not (dest / "a.txt").exists()
-        assert (dest / "b.txt").exists()
+        previous = {Path("skills/my-skill/SKILL.md")}
+        current = set()
+        do_cleanup(dest, previous, current, dry_run=False)
 
-    def test_removes_source_owned_dirs(self, tmp_path: Path):
-        dest = tmp_path / "dest"
-        (dest / "sub").mkdir(parents=True)
-        (dest / "sub" / "f.txt").write_text("f")
+        assert (dest / "settings.local.json").exists()
+        assert (dest / "skills" / "external-skill" / "SKILL.md").exists()
 
-        do_undeploy(dest, {Path("sub/f.txt")}, {Path("sub")}, dry_run=False)
-        assert not (dest / "sub").exists()
-
-    def test_leaves_non_source_paths(self, tmp_path: Path):
+    def test_no_cleanup_on_first_deploy(self, tmp_path: Path):
+        """When previous manifest is empty, nothing should be deleted."""
         dest = tmp_path / "dest"
         dest.mkdir()
-        (dest / "mine.txt").write_text("mine")
+        (dest / "existing.txt").write_text("keep")
 
-        do_undeploy(dest, {Path("other.txt")}, set(), dry_run=False)
-        assert (dest / "mine.txt").exists()
+        do_cleanup(dest, set(), {Path("new.txt")}, dry_run=False)
+
+        assert (dest / "existing.txt").exists()
 
     def test_dry_run_does_not_delete(self, tmp_path: Path):
         dest = tmp_path / "dest"
         dest.mkdir()
-        (dest / "a.txt").write_text("a")
+        (dest / "stale.txt").write_text("stale")
 
-        do_undeploy(dest, {Path("a.txt")}, set(), dry_run=True)
-        assert (dest / "a.txt").exists()
+        previous = {Path("stale.txt")}
+        current = set()
+        do_cleanup(dest, previous, current, dry_run=True)
+
+        assert (dest / "stale.txt").exists()
+
+    def test_does_not_remove_dir_if_still_has_content(self, tmp_path: Path):
+        """If a dir still has other files after cleanup, don't remove it."""
+        dest = tmp_path / "dest"
+        (dest / "skills" / "my-skill").mkdir(parents=True)
+        (dest / "skills" / "my-skill" / "SKILL.md").write_text("mine")
+        (dest / "skills" / "external").mkdir(parents=True)
+        (dest / "skills" / "external" / "SKILL.md").write_text("ext")
+        (dest / "skills" / "old-skill").mkdir(parents=True)
+        (dest / "skills" / "old-skill" / "SKILL.md").write_text("old")
+
+        previous = {Path("skills/my-skill/SKILL.md"), Path("skills/old-skill/SKILL.md")}
+        current = {Path("skills/my-skill/SKILL.md")}
+        do_cleanup(dest, previous, current, dry_run=False)
+
+        assert not (dest / "skills" / "old-skill").exists()
+        assert (dest / "skills" / "my-skill" / "SKILL.md").exists()
+        assert (dest / "skills" / "external" / "SKILL.md").exists()
+        assert (dest / "skills").exists()
+
+
+# ---------------------------------------------------------------------------
+# Integration: deploy → remove from source → deploy again
+# ---------------------------------------------------------------------------
+
+
+class TestDeployIntegration:
+    def test_stale_file_cleaned_on_second_deploy(self, tmp_path: Path):
+        """Full cycle: deploy, remove a file from source, deploy again."""
+        src = tmp_path / "src"
+        dest = tmp_path / "dest"
+        dest.mkdir()
+
+        # First deploy: two skills
+        (src / "skills" / "keep").mkdir(parents=True)
+        (src / "skills" / "keep" / "SKILL.md").write_text("keep")
+        (src / "skills" / "remove-me").mkdir(parents=True)
+        (src / "skills" / "remove-me" / "SKILL.md").write_text("remove")
+
+        source_files_v1 = {
+            Path("skills/keep/SKILL.md"),
+            Path("skills/remove-me/SKILL.md"),
+        }
+        do_copy(src, dest, source_files_v1, dry_run=False)
+        write_manifest(dest, source_files_v1)
+
+        assert (dest / "skills" / "remove-me" / "SKILL.md").exists()
+
+        # Second deploy: remove-me is gone from source
+        import shutil
+
+        shutil.rmtree(src / "skills" / "remove-me")
+        source_files_v2 = {Path("skills/keep/SKILL.md")}
+
+        previous = read_manifest(dest)
+        do_copy(src, dest, source_files_v2, dry_run=False)
+        do_cleanup(dest, previous, source_files_v2, dry_run=False)
+        write_manifest(dest, source_files_v2)
+
+        assert (dest / "skills" / "keep" / "SKILL.md").exists()
+        assert not (dest / "skills" / "remove-me").exists()
+
+        # Verify manifest reflects current state
+        final_manifest = read_manifest(dest)
+        assert final_manifest == {Path("skills/keep/SKILL.md")}

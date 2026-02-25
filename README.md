@@ -17,7 +17,7 @@ The `claude/` tree in this repo is **deployed** to `~/.claude/`. Claude Code rea
    ```bash
    uv run deploy
    ```
-   This copies the `claude/` tree into `~/.claude/` (merge only: your existing files there, e.g. `settings.local.json`, are kept).
+   This copies the `claude/` tree into `~/.claude/` (merge semantics: your existing files there, e.g. `settings.local.json`, are kept). Files removed from the repo are automatically cleaned up from the target on the next deploy.
 
 ## Deployment commands
 
@@ -25,11 +25,9 @@ The `claude/` tree in this repo is **deployed** to `~/.claude/`. Claude Code rea
 |--------|-------------|
 | `uv run deploy` | Deploy to `~/.claude` (default home) |
 | `uv run deploy --target /path/to/home` | Deploy so that files go to `DIR/.claude` (or set `DOT_CLAUDE_HOME`) |
-| `uv run deploy --dry-run` | Show what would be copied, no writes |
-| `uv run deploy --sync` | After copy, remove from target any path that no longer exists in the repo |
-| `uv run deploy --undeploy` | Remove only repo-managed paths from the target (keeps e.g. `settings.local.json`) |
+| `uv run deploy --dry-run` | Show what would be copied/deleted, no writes |
 
-If the target has a **file** where the repo has a **directory** (or the reverse), the script reports a conflict and exits unless you pass `--force`.
+If the target has a **file** where the repo has a **directory** (or the reverse), the script reports a conflict and exits.
 
 ## Requirements
 

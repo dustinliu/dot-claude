@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Deploy or undeploy the `claude/` source tree to a target `.claude/` directory using Stow-like merge semantics. The tool copies source files into the target, optionally syncs stale files, and supports undeployment — all with dry-run previews and conflict detection.
+Synchronize the `claude/` source tree to a target `.claude/` directory using merge semantics. The tool copies source files into the target, automatically cleans up stale files from prior deploys using a manifest, and supports dry-run previews. It never touches files it did not deploy.
 
 ## Requirements
 
@@ -70,45 +70,26 @@ The tool MUST validate that the source tree exists and is non-empty before any o
 
 ### Requirement: Conflict Detection
 
-The tool SHALL detect type conflicts where a source file maps to an existing directory in the target (or vice versa). Non-existent target paths are not conflicts.
+The tool SHALL detect type conflicts where a source file maps to an existing directory in the target (or vice versa). When a conflict is detected, the tool MUST abort with an error. Non-existent target paths are not conflicts.
 
 #### Scenario: No conflicts
 
 - **WHEN** all source paths either do not exist in the target or have the same type (file vs directory)
-- **THEN** an empty conflict list is returned
+- **THEN** deployment proceeds normally
 
 #### Scenario: File-vs-directory conflict
 
 - **WHEN** a source path is a file but the corresponding target path is a directory
-- **THEN** that path is included in the conflict list
+- **THEN** the tool prints the conflicting path to stderr and exits with code 1
 
 #### Scenario: Directory-vs-file conflict
 
 - **WHEN** a source path is a directory but the corresponding target path is a file
-- **THEN** that path is included in the conflict list
-
-#### Scenario: Non-existent target path
-
-- **WHEN** a source path does not exist in the target at all
-- **THEN** that path is not a conflict
-
-### Requirement: Conflict Resolution
-
-The tool SHALL either abort or force overwrite when conflicts are detected, based on the `--force` flag.
-
-#### Scenario: Abort without --force
-
-- **WHEN** conflicts exist and `--force` is not set
-- **THEN** the tool prints the conflicting paths to stderr, advises using `--force`, and exits with code 1
-
-#### Scenario: Overwrite with --force
-
-- **WHEN** conflicts exist and `--force` is set
-- **THEN** the tool prints the conflicting paths to stderr, prints a warning that it is overwriting, and proceeds with deployment
+- **THEN** the tool prints the conflicting path to stderr and exits with code 1
 
 ### Requirement: Deploy (Copy)
 
-The tool SHALL copy all source files into the target directory using merge semantics. Existing files are overwritten. Parent directories are created as needed. Symlinks in the destination path MUST be removed before copying.
+The tool SHALL copy all source files into the target directory using merge semantics. Existing files are overwritten. Parent directories are created as needed.
 
 #### Scenario: Fresh deploy
 
@@ -123,113 +104,83 @@ The tool SHALL copy all source files into the target directory using merge seman
 #### Scenario: Overwrite existing file
 
 - **WHEN** a source file already exists at the target path
-- **THEN** the target file is overwritten with the source file, preserving metadata via `copy2`
-
-#### Scenario: Symlink removal
-
-- **WHEN** a symlink exists along the destination path (e.g. a leftover Stow symlink)
-- **THEN** the symlink is removed before creating directories or copying the file
+- **THEN** the target file is overwritten with the source file
 
 #### Scenario: Parent directory creation
 
 - **WHEN** a source file is nested (e.g. `agents/foo/AGENT.md`) and intermediate directories do not exist in the target
 - **THEN** all necessary parent directories are created
 
-### Requirement: Sync
+### Requirement: Manifest Write
 
-After copying, the tool SHALL remove files and directories from the target that are within source-managed directories but no longer present in the source. Directories MUST be processed depth-first. Paths that are ancestors of owned paths MUST be preserved.
+After a successful deploy, the tool SHALL write a manifest file (`.deploy-manifest.json`) to the target directory recording all file paths that were deployed.
 
-#### Scenario: Remove stale file
+#### Scenario: Manifest created on deploy
 
-- **WHEN** the target contains a file inside a source-managed directory that is not in the current source file set
-- **THEN** that file is deleted
+- **WHEN** deploy completes successfully
+- **THEN** a `.deploy-manifest.json` file is written to the target directory containing a JSON object with a `files` array of all deployed relative file paths
 
-#### Scenario: Preserve files outside source directories
+#### Scenario: Manifest is overwritten on subsequent deploy
 
-- **WHEN** the target contains files in directories that are not managed by the source
+- **WHEN** a manifest already exists in the target directory
+- **THEN** it is replaced with a new manifest reflecting the current deploy
+
+#### Scenario: Manifest not written on dry-run
+
+- **WHEN** `--dry-run` is specified
+- **THEN** no manifest file is written or modified
+
+### Requirement: Manifest-based Cleanup
+
+After copying, the tool SHALL remove files from the target that were recorded in the previous manifest but are not in the current source. This ensures stale files from prior deploys are automatically cleaned up without touching files managed by other tools.
+
+#### Scenario: Remove stale file from prior deploy
+
+- **WHEN** the previous manifest lists `skills/old-skill/SKILL.md` but the current source does not contain it
+- **THEN** `skills/old-skill/SKILL.md` is deleted from the target
+
+#### Scenario: Remove empty directories after cleanup
+
+- **WHEN** cleanup removes all files from a directory that was created by a prior deploy
+- **THEN** the empty directory is also removed
+
+#### Scenario: Preserve files not in manifest
+
+- **WHEN** the target contains files that are not listed in the previous manifest (e.g. external skills, user settings)
 - **THEN** those files are left untouched
 
-#### Scenario: Preserve ancestor directories
+#### Scenario: No manifest exists (first deploy)
 
-- **WHEN** a target directory is not in the source set but contains descendants that are in the source set
-- **THEN** that directory is preserved
+- **WHEN** no `.deploy-manifest.json` exists in the target directory
+- **THEN** no cleanup is performed; only copy and manifest creation occur
 
-#### Scenario: Depth-first processing
+#### Scenario: Dry-run shows cleanup actions
 
-- **WHEN** sync processes source directories
-- **THEN** deeper directories are processed before shallower ones
-
-#### Scenario: Remove stale directory
-
-- **WHEN** the target contains a directory inside a source-managed directory that is not in the source set and has no owned descendants
-- **THEN** that entire directory tree is removed
-
-#### Scenario: No sync without --sync flag
-
-- **WHEN** `--sync` is not provided
-- **THEN** no stale files or directories are removed from the target
-
-### Requirement: Undeploy
-
-The tool SHALL remove from the target only the paths that exist in the source. Paths MUST be processed depth-first (deepest first). The tool MUST NOT copy anything during undeploy.
-
-#### Scenario: Remove deployed files
-
-- **WHEN** undeploy runs and source files exist in the target
-- **THEN** those files are deleted from the target
-
-#### Scenario: Remove deployed directories
-
-- **WHEN** undeploy runs and source directories exist in the target with no non-source content
-- **THEN** those directories are removed via `rmtree`
-
-#### Scenario: Skip missing paths
-
-- **WHEN** a source path does not exist in the target
-- **THEN** that path is silently skipped
-
-#### Scenario: Depth-first removal
-
-- **WHEN** undeploy processes paths
-- **THEN** deeper paths are removed before shallower ones
-
-#### Scenario: No copy on undeploy
-
-- **WHEN** `--undeploy` is specified
-- **THEN** no files are copied — only removal is performed
-
-#### Scenario: Preserve non-source paths
-
-- **WHEN** the target contains files or directories not in the source
-- **THEN** those paths are left untouched during undeploy
+- **WHEN** `--dry-run` is specified and stale files exist
+- **THEN** files that would be deleted are printed as `delete <rel_path>` with no filesystem changes
 
 ### Requirement: Dry Run
 
-When `--dry-run` is specified, the tool SHALL print what would be done without modifying the filesystem. This MUST apply to deploy, sync, and undeploy operations.
+When `--dry-run` is specified, the tool SHALL print what would be done without modifying the filesystem. This MUST apply to both copy and cleanup operations.
 
 #### Scenario: Dry-run deploy
 
 - **WHEN** `--dry-run` is specified for a deploy operation
 - **THEN** each file that would be copied is printed as `copy <rel_path>` and no files are written
 
-#### Scenario: Dry-run deploy with sync
+#### Scenario: Dry-run cleanup
 
-- **WHEN** `--dry-run` and `--sync` are both specified
-- **THEN** files that would be copied are printed as `copy <rel_path>` and files that would be deleted are printed as `delete <rel_path>`, with no filesystem changes
-
-#### Scenario: Dry-run undeploy
-
-- **WHEN** `--dry-run` and `--undeploy` are both specified
-- **THEN** each path that would be removed is printed as `delete <rel_path>` and no files are removed
+- **WHEN** `--dry-run` is specified and stale files from a previous manifest would be removed
+- **THEN** files that would be deleted are printed as `delete <rel_path>`, with no filesystem changes
 
 ### Requirement: CLI Interface
 
-The tool SHALL be invoked via `uv run deploy` (mapped in `pyproject.toml`). It MUST accept `--target`, `--dry-run`, `--sync`, `--force`, and `--undeploy` flags.
+The tool SHALL be invoked via `uv run deploy` (mapped in `pyproject.toml`). It MUST accept `--target` and `--dry-run` flags. The target MAY also be set via the `DOT_CLAUDE_HOME` environment variable.
 
 #### Scenario: Default invocation
 
 - **WHEN** the tool is invoked with no flags
-- **THEN** it deploys the source tree to `$HOME/.claude/` and prints "Deployed to <path>"
+- **THEN** it deploys the source tree to `$HOME/.claude/`, cleans up stale files from prior deploys, and prints "Deployed to <path>"
 
 #### Scenario: Help flag
 
