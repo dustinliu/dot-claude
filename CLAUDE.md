@@ -43,7 +43,7 @@ Changes only take effect after deployment.
    uv run ruff check scripts/
    ```
 4. Run tests: `uv run pytest`
-5. after git commit, run deploy
+5. Do NOT run deploy immediately after editing — only run `uv run deploy` **after a git commit** has been made.
 
 ## External skills (`skills-lock.json`)
 
