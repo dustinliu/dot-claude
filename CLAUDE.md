@@ -1,61 +1,60 @@
-# dot-claude (developer)
+# dot-claude
 
-Development and maintenance repository for Claude Code configurations. This file is for **developers** working in this repo. For installation and usage, see **README.md**.
+Personal Claude Code configuration — custom CLAUDE.md, skills, and agents, with a CLI tool to manage artifacts across multiple repos.
 
-## ⚠️ Important
-
-- Skills, agents, and CLAUDE.md live in `src/dot_claude/claude/` — this is the **single source of truth** (bundled as package data).
-- Use `dot-claude add/update/remove/list` CLI commands to deploy items to `~/.claude/` or `./.claude/`.
-- Claude Code reads from `~/.claude/` or `./.claude/` (the deployed locations).
-
-Changes only take effect after deployment.
-
-## Directory structure
+## Repository Structure
 
 ```
-.
-├── src/dot_claude/                   # Python package
-│   ├── __init__.py
-│   ├── claude/                       # Source of truth for skills/agents (package data)
-│   │   ├── CLAUDE.md                 # Workspace rules for Claude Code
-│   │   ├── agents/                   # Claude Code subagents
-│   │   └── skills/                   # Claude Code skills
-│   ├── cli.py                        # CLI entry point (dot-claude command)
-│   ├── installer.py                  # Install/remove logic
-│   ├── inventory.py                  # List available items from package data
-│   ├── manifest.py                   # Deploy manifest read/write
-│   └── tui.py                        # Interactive TUI (scope/item selection)
-├── openspec/                         # OpenSpec artifacts (specs, changes, config)
-├── tests/                            # pytest tests
-├── .editorconfig
-├── .gitignore
-├── .python-version
-├── CLAUDE.md                         # This file (repo dev rules)
-├── LICENSE
-├── README.md                         # User manual
-├── pyproject.toml                    # Python project config (hatchling build)
-├── skills-lock.json                  # Tracks external skills (gitignored)
-└── uv.lock
+my-claude/CLAUDE.md    # Global CLAUDE.md (symlinked to ~/.claude/CLAUDE.md)
+my-skills/             # Custom skills (artifact source)
+my-agents/             # Custom agents (artifact source)
+src/dot_claude/        # CLI tool source code
+  cli.py               # Click CLI entry point and subcommands
+  config.py            # XDG paths, TOML config parsing, init
+  repos.py             # Git clone/pull, artifact scanning
+  deploy.py            # Symlink creation/removal, install status
+tests/                 # Test suite (pytest)
 ```
 
-## Development workflow
+## CLI Tool (dot-claude)
 
-1. Edit agents, skills, or files under `src/dot_claude/claude/` in this repo.
-2. After changing Python in `src/`, run [Ruff](https://docs.astral.sh/ruff/):
-   ```bash
-   uv run ruff format src/
-   uv run ruff check src/
-   ```
-3. Run tests: `uv run pytest`
-4. Test CLI locally: `uv run dot-claude add/update/remove/list`
+Manages Claude Code skills and agents artifacts from multiple git repos via symlinks.
 
-## External skills (`skills-lock.json`)
+### Setup
+```bash
+uvx dot-claude init     # Create config at $XDG_CONFIG_HOME/dot-claude/dot-claude.toml
+# Edit config to add repos, then:
+uvx dot-claude update   # Clone/pull all configured repos
+```
 
-`skills-lock.json` is maintained by `npx skills` (the skills CLI) to track externally sourced skills installed from GitHub (e.g. `obra/superpowers`). It records each skill's source repo, type, and content hash so the CLI can detect updates.
+### Commands
+```bash
+uvx dot-claude add <name> [-g]   # Symlink artifact (-g = user scope, default = project scope)
+uvx dot-claude remove <name> [-g] # Remove symlink
+uvx dot-claude list [-g]          # List all available artifacts with install status
+uvx dot-claude update              # Clone new / pull existing repos
+```
 
-- **Not checked in** — the file is gitignored since it varies per machine.
-- **Do not edit manually** — use `npx skills` to add, update, or remove external skills.
+### Config ($XDG_CONFIG_HOME/dot-claude/dot-claude.toml)
+```toml
+[[repos]]
+name = "dot-claude"
+url = "https://github.com/user/dot-claude.git"
+skills = "my-skills"  # optional, default: "skills"
+agents = "my-agents"  # optional, default: "agents"
 
-## User-facing docs
+[[repos]]
+name = "external-skills"
+url = "https://github.com/user/external-skills.git"
+```
 
-Deployment commands, options, and requirements are in **README.md** (user manual).
+## Deployment
+
+Artifacts are deployed by the CLI tool via symlinks:
+- User scope: `~/.claude/skills/*`, `~/.claude/agents/*`
+- Project scope: `./.claude/skills/*`, `./.claude/agents/*`
+- `my-claude/CLAUDE.md` -> `~/.claude/CLAUDE.md` (manual symlink)
+
+## Rules (MUST follow — no exceptions)
+- All instruction content MUST be written in English; user-facing communication preferences are defined in CLAUDE.md
+- After any change that affects project structure, files, deployment, or rules, you MUST update this CLAUDE.md to reflect the current state. A task is NOT complete until this file is accurate.

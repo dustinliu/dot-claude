@@ -1,34 +1,24 @@
 [project]
 name = "dot-claude"
 version = "0.1.0"
-description = "CLI tool for managing Claude Code skills and agents"
-readme = "README.md"
-requires-python = ">=3.13"
-dependencies = [
-    "click>=8.1",
-    "questionary>=2.0",
+description = "CLI tool for managing Claude Code skills and agents artifacts"
+authors = [
+    { name = "Dustin Liu", email = "liu.minlun@gmail.com" }
 ]
-
-[dependency-groups]
-dev = [
-    "pytest>=8.0",
-    "pytest-cov>=7.0.0",
-    "ruff>=0.8.0",
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.3.1",
+    "inquirerpy>=0.3.4",
 ]
 
 [project.scripts]
 dot-claude = "dot_claude.cli:main"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.10.4,<0.11.0"]
+build-backend = "uv_build"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/dot_claude"]
-
-[tool.uv]
-package = true
-
-[tool.ruff]
-target-version = "py313"
-line-length = 100
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]

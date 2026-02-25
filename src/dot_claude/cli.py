@@ -1,157 +1,167 @@
 """CLI entry point for dot-claude."""
 
-from __future__ import annotations
-
-import subprocess
-import sys
-from importlib import resources
-from importlib.resources.abc import Traversable
 from pathlib import Path
 
 import click
+from InquirerPy import inquirer
 
-from dot_claude.installer import install
-from dot_claude.inventory import list_items
-from dot_claude.manifest import read_manifest
-from dot_claude.tui import prompt_items, prompt_scope
-
-
-def _get_data_root() -> Traversable:
-    return resources.files("dot_claude") / "claude"
-
-
-def _get_user_dest() -> Path:
-    return Path.home() / ".claude"
+from dot_claude.config import (
+    config_path,
+    cache_dir,
+    init_config,
+    load_config,
+    ConfigError,
+)
+from dot_claude.repos import update_repos, scan_artifacts, Artifact
+from dot_claude.deploy import create_symlink, remove_symlink, detect_install_status, DeployError
 
 
-def _get_project_dest() -> Path:
+def _load_all_artifacts() -> list[Artifact]:
+    """Load config and scan all repos for artifacts."""
+    cfg = config_path()
+    repos = load_config(cfg)
+    cache = cache_dir()
+    artifacts: list[Artifact] = []
+    for repo in repos:
+        repo_dir = cache / repo.name
+        if repo_dir.exists():
+            artifacts.extend(scan_artifacts(repo, cache))
+    return artifacts
+
+
+def _scope_dir(global_flag: bool) -> Path:
+    """Return the target scope directory."""
+    if global_flag:
+        return Path.home() / ".claude"
     return Path.cwd() / ".claude"
 
 
-def _upgrade_package() -> None:
-    subprocess.run(
-        [sys.executable, "-m", "uv", "tool", "upgrade", "dot-claude"],
-        check=True,
-    )
-
-
-@click.group(invoke_without_command=True)
-@click.pass_context
-def cli(ctx: click.Context) -> None:
-    """Manage Claude Code skills and agents."""
-    if ctx.invoked_subcommand is None:
-        click.echo(ctx.get_help())
-
-
-@cli.command()
-def add() -> None:
-    """Add skills and agents to a scope."""
-    data_root = _get_data_root()
-    cwd = Path.cwd()
-
-    scope = prompt_scope(cwd)
-    if scope is None:
-        click.echo("Cancelled.")
-        return
-
-    dest = _get_user_dest() if scope == "user" else _get_project_dest()
-
-    items = list_items(data_root)
-    manifest = read_manifest(dest)
-    pre_selected = manifest.items if manifest else []
-
-    selected = prompt_items(items, pre_selected)
-    if selected is None:
-        click.echo("Cancelled.")
-        return
-
-    install(data_root=data_root, dest=dest, selected_items=selected, scope=scope)
-
-    item_count = len(selected)
-    click.echo(f"Installed {item_count} item(s) to {dest}")
-
-
-@cli.command()
-def remove() -> None:
-    """Remove skills and agents from a scope."""
-    data_root = _get_data_root()
-    cwd = Path.cwd()
-
-    scope = prompt_scope(cwd)
-    if scope is None:
-        click.echo("Cancelled.")
-        return
-
-    dest = _get_user_dest() if scope == "user" else _get_project_dest()
-
-    manifest = read_manifest(dest)
-    if manifest is None:
-        click.echo("Nothing installed in this scope.")
-        return
-
-    items = list_items(data_root)
-    selected = prompt_items(items, manifest.items)
-    if selected is None:
-        click.echo("Cancelled.")
-        return
-
-    install(data_root=data_root, dest=dest, selected_items=selected, scope=scope)
-
-    removed_count = len(set(manifest.items) - set(selected))
-    click.echo(f"Removed {removed_count} item(s) from {dest}")
-
-
-@cli.command("list")
-def list_cmd() -> None:
-    """List installed skills and agents."""
-    user_dest = _get_user_dest()
-    project_dest = _get_project_dest()
-
-    user_manifest = read_manifest(user_dest)
-    project_manifest = read_manifest(project_dest)
-
-    if not user_manifest and not project_manifest:
-        click.echo("Nothing installed.")
-        return
-
-    if user_manifest and user_manifest.items:
-        click.echo(f"User ({user_dest}):")
-        for item in sorted(user_manifest.items):
-            click.echo(f"  {item}")
-
-    if project_manifest and project_manifest.items:
-        click.echo(f"Project ({project_dest}):")
-        for item in sorted(project_manifest.items):
-            click.echo(f"  {item}")
-
-
-@cli.command()
-def update() -> None:
-    """Upgrade the package and re-deploy installed items."""
-    _upgrade_package()
-
-    data_root = _get_data_root()
-    user_dest = _get_user_dest()
-    project_dest = _get_project_dest()
-
-    updated = 0
-    for dest in [user_dest, project_dest]:
-        manifest = read_manifest(dest)
-        if manifest is None:
-            continue
-        install(
-            data_root=data_root,
-            dest=dest,
-            selected_items=manifest.items,
-            scope=manifest.scope,
-        )
-        updated += len(manifest.items)
-
-    if updated:
-        click.echo(f"Updated {updated} item(s).")
-    else:
-        click.echo("Nothing to update.")
-
-
+@click.group()
 def main() -> None:
-    cli()
+    """Manage Claude Code skills and agents artifacts."""
+
+
+@main.command()
+def init() -> None:
+    """Create config directory and generate example config."""
+    cfg = config_path()
+    try:
+        init_config(cfg)
+        click.echo(f"Created {cfg}")
+    except ConfigError as e:
+        raise click.ClickException(str(e))
+
+
+@main.command()
+def update() -> None:
+    """Clone or pull all configured repos."""
+    cfg = config_path()
+    try:
+        repos = load_config(cfg)
+    except ConfigError as e:
+        raise click.ClickException(str(e))
+
+    cache = cache_dir()
+    errors = update_repos(repos, cache)
+
+    if errors:
+        for err in errors:
+            click.echo(f"Error: {err}", err=True)
+    else:
+        click.echo("All repos up to date")
+
+
+@main.command("list")
+@click.option("-g", "global_scope", is_flag=True, help="Show user scope only")
+def list_cmd(global_scope: bool) -> None:
+    """List all available artifacts with install status."""
+    try:
+        artifacts = _load_all_artifacts()
+    except ConfigError as e:
+        raise click.ClickException(str(e))
+
+    if not artifacts:
+        click.echo("No artifacts found. Run 'dot-claude update' first.")
+        return
+
+    user_dir = Path.home() / ".claude"
+    project_dir = None if global_scope else Path.cwd() / ".claude"
+
+    skills = [a for a in artifacts if a.kind == "skill"]
+    agents = [a for a in artifacts if a.kind == "agent"]
+
+    # Calculate column widths
+    all_names = [a.name for a in artifacts]
+    all_repos = [a.repo_name for a in artifacts]
+    name_width = max(len(n) for n in all_names) if all_names else 0
+    repo_width = max(len(r) for r in all_repos) if all_repos else 0
+
+    def _format_line(artifact: Artifact) -> str:
+        status = detect_install_status(
+            artifact.name, artifact.kind, user_dir, project_dir
+        )
+        status_str = f"[{status}]" if status else "-"
+        return f"  {artifact.name:<{name_width}}  {artifact.repo_name:<{repo_width}}  {status_str}"
+
+    if skills:
+        click.echo("Skills:")
+        for a in skills:
+            click.echo(_format_line(a))
+        click.echo()
+
+    if agents:
+        click.echo("Agents:")
+        for a in agents:
+            click.echo(_format_line(a))
+
+
+@main.command()
+@click.argument("name")
+@click.option("-g", "global_scope", is_flag=True, help="Install to user scope (~/.claude/)")
+def add(name: str, global_scope: bool) -> None:
+    """Add an artifact by creating a symlink."""
+    try:
+        artifacts = _load_all_artifacts()
+    except ConfigError as e:
+        raise click.ClickException(str(e))
+
+    matches = [a for a in artifacts if a.name == name]
+    if not matches:
+        raise click.ClickException(f"Artifact '{name}' not found in any repo")
+
+    if len(matches) == 1:
+        artifact = matches[0]
+    else:
+        # Multiple repos have same artifact — prompt for selection
+        repo_names = [a.repo_name for a in matches]
+        selected = inquirer.select(
+            message=f"Multiple sources found for '{name}':",
+            choices=repo_names,
+        ).execute()
+        artifact = next(a for a in matches if a.repo_name == selected)
+
+    scope = _scope_dir(global_scope)
+    try:
+        create_symlink(artifact, scope)
+        click.echo(f"Symlinked {name} to {scope}/")
+    except DeployError as e:
+        raise click.ClickException(str(e))
+
+
+@main.command()
+@click.argument("name")
+@click.option("-g", "global_scope", is_flag=True, help="Remove from user scope (~/.claude/)")
+def remove(name: str, global_scope: bool) -> None:
+    """Remove an artifact symlink."""
+    scope = _scope_dir(global_scope)
+
+    # Try skill first, then agent
+    for kind in ("skill", "agent"):
+        try:
+            remove_symlink(name, kind, scope)
+            click.echo(f"Removed {name} from {scope}/")
+            return
+        except DeployError:
+            continue
+
+    raise click.ClickException(f"'{name}' is not installed in {scope}")
