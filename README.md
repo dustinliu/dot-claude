@@ -1,36 +1,64 @@
 # dot-claude
 
-User manual for Claude Code configurations. Use this repo to install, update, and manage your Claude Code agents and skills.
+CLI tool for managing Claude Code skills and agents. Install skills and agents to user scope (`~/.claude/`) or project scope (`./.claude/`) with an interactive TUI.
 
 ## What you get
 
 - **Agents** — role-specific prompts (e.g. code-explorer, code-architect, code-reviewer)
 - **Skills** — reusable task instructions (e.g. git-commit)
-- **Rules** — workspace conventions Claude Code follows
+- **Rules** — workspace conventions Claude Code follows (`CLAUDE.md`, user scope only)
 
-The `claude/` tree in this repo is **deployed** to `~/.claude/`. Claude Code reads from `~/.claude/`, not from this repo. Deploy after cloning or pulling to apply changes.
+## Install
 
-## Quick start
+```bash
+uv tool install git+https://github.com/dustinl/dot-claude
+```
 
-1. Clone the repo (or ensure it’s up to date).
-2. From the repo root, run:
-   ```bash
-   uv run deploy
-   ```
-   This copies the `claude/` tree into `~/.claude/` (merge semantics: your existing files there, e.g. `settings.local.json`, are kept). Files removed from the repo are automatically cleaned up from the target on the next deploy.
+## Usage
 
-## Deployment commands
+### Add skills/agents
 
-| Command | Description |
-|--------|-------------|
-| `uv run deploy` | Deploy to `~/.claude` (default home) |
-| `uv run deploy --target /path/to/home` | Deploy so that files go to `DIR/.claude` (or set `DOT_CLAUDE_HOME`) |
-| `uv run deploy --dry-run` | Show what would be copied/deleted, no writes |
+```bash
+dot-claude add
+```
 
-If the target has a **file** where the repo has a **directory** (or the reverse), the script reports a conflict and exits.
+Interactive wizard:
+1. Select scope — **User** (`~/.claude/`) or **Project** (`<cwd>/.claude/`)
+2. Select items — check/uncheck skills and agents to install
+
+Selections are remembered per scope. Next time you run `add`, previous choices are pre-checked.
+
+### Update
+
+```bash
+dot-claude update
+```
+
+Upgrades the CLI to the latest version from GitHub and re-deploys all previously installed items.
+
+### Remove
+
+```bash
+dot-claude remove
+```
+
+Deselect items to remove from a scope.
+
+### List installed
+
+```bash
+dot-claude list
+```
+
+Shows what's installed in user and project scope.
+
+## How it works
+
+- Skills and agents are bundled as package data inside the CLI tool
+- `CLAUDE.md` is automatically deployed to user scope (never to project scope)
+- A `.deploy-manifest.json` in each target directory tracks what was installed
+- Files not managed by dot-claude (e.g. `settings.local.json`, external skills) are never touched
 
 ## Requirements
 
-- [uv](https://docs.astral.sh/uv/) (Python package runner). The project uses `pyproject.toml` and runs the deploy script via `uv run deploy`.
-
-For development and contributing, see **CLAUDE.md** in this repo.
+- [uv](https://docs.astral.sh/uv/) (Python package runner/installer)

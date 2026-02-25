@@ -1,11 +1,12 @@
 [project]
 name = "dot-claude"
 version = "0.1.0"
-description = "Add your description here"
+description = "CLI tool for managing Claude Code skills and agents"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "pyyaml>=6.0.3",
+    "click>=8.1",
+    "questionary>=2.0",
 ]
 
 [dependency-groups]
@@ -16,14 +17,14 @@ dev = [
 ]
 
 [project.scripts]
-deploy = "scripts.deploy:main"
+dot-claude = "dot_claude.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["scripts"]
+packages = ["src/dot_claude"]
 
 [tool.uv]
 package = true
