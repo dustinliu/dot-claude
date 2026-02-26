@@ -55,6 +55,18 @@ class TestCreateSymlink:
         create_symlink(artifact, target_dir)
         assert (target_dir / "skills").is_dir()
 
+    def test_returns_target_path_for_skill(self, tmp_path):
+        artifact = _skill(tmp_path)
+        target_dir = tmp_path / "target"
+        result = create_symlink(artifact, target_dir)
+        assert result == target_dir / "skills" / "my-skill"
+
+    def test_returns_target_path_for_agent(self, tmp_path):
+        artifact = _agent(tmp_path)
+        target_dir = tmp_path / "target"
+        result = create_symlink(artifact, target_dir)
+        assert result == target_dir / "agents" / "my-agent.md"
+
     def test_refuses_overwrite_existing(self, tmp_path):
         artifact = _skill(tmp_path)
         target_dir = tmp_path / "target"
@@ -79,6 +91,20 @@ class TestRemoveSymlink:
         create_symlink(artifact, target_dir)
         remove_symlink("my-agent", "agent", target_dir)
         assert not (target_dir / "agents" / "my-agent.md").exists()
+
+    def test_returns_target_path_for_skill(self, tmp_path):
+        artifact = _skill(tmp_path)
+        target_dir = tmp_path / "target"
+        create_symlink(artifact, target_dir)
+        result = remove_symlink("my-skill", "skill", target_dir)
+        assert result == target_dir / "skills" / "my-skill"
+
+    def test_returns_target_path_for_agent(self, tmp_path):
+        artifact = _agent(tmp_path)
+        target_dir = tmp_path / "target"
+        create_symlink(artifact, target_dir)
+        result = remove_symlink("my-agent", "agent", target_dir)
+        assert result == target_dir / "agents" / "my-agent.md"
 
     def test_warns_on_regular_file(self, tmp_path):
         target_dir = tmp_path / "target"

@@ -99,7 +99,7 @@ class TestListCommand:
         project_dir.mkdir()
         monkeypatch.chdir(project_dir)
         # Install skill to project scope
-        result = runner.invoke(main, ["add", "my-skill"])
+        result = runner.invoke(main, ["add", "-p", "my-skill"])
         assert result.exit_code == 0
         # list without -g shows [project]
         result = runner.invoke(main, ["list"])
@@ -126,9 +126,10 @@ class TestAddCommand:
         project_dir = mock_env / "project"
         project_dir.mkdir()
         monkeypatch.chdir(project_dir)
-        result = runner.invoke(main, ["add", "my-skill"])
+        result = runner.invoke(main, ["add", "-p", "my-skill"])
         assert result.exit_code == 0
         assert (project_dir / ".claude" / "skills" / "my-skill").is_symlink()
+        assert "skills/my-skill" in result.output
 
     def test_add_to_user_scope(self, runner, mock_env, monkeypatch):
         fake_home = mock_env / "home"
@@ -137,9 +138,10 @@ class TestAddCommand:
         result = runner.invoke(main, ["add", "-g", "my-skill"])
         assert result.exit_code == 0
         assert (fake_home / ".claude" / "skills" / "my-skill").is_symlink()
+        assert "skills/my-skill" in result.output
 
     def test_add_unknown_artifact(self, runner, mock_env):
-        result = runner.invoke(main, ["add", "nonexistent"])
+        result = runner.invoke(main, ["add", "-p", "nonexistent"])
         assert result.exit_code != 0
         assert "not found" in result.output
 
@@ -147,9 +149,37 @@ class TestAddCommand:
         project_dir = mock_env / "project"
         project_dir.mkdir()
         monkeypatch.chdir(project_dir)
-        result = runner.invoke(main, ["add", "my-agent"])
+        result = runner.invoke(main, ["add", "-p", "my-agent"])
         assert result.exit_code == 0
         assert (project_dir / ".claude" / "agents" / "my-agent.md").is_symlink()
+        assert "agents/my-agent.md" in result.output
+
+    def test_add_without_flags_shows_tui(self, runner, mock_env, monkeypatch):
+        project_dir = mock_env / "project"
+        project_dir.mkdir()
+        monkeypatch.chdir(project_dir)
+        with patch("dot_claude.cli.inquirer") as mock_inq:
+            mock_inq.select.return_value.execute.return_value = f"Project ({project_dir / '.claude'})"
+            result = runner.invoke(main, ["add", "my-skill"])
+            assert result.exit_code == 0
+            mock_inq.select.assert_called_once()
+            assert (project_dir / ".claude" / "skills" / "my-skill").is_symlink()
+
+    def test_add_without_flags_tui_user_scope(self, runner, mock_env, monkeypatch):
+        fake_home = mock_env / "home"
+        fake_home.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: fake_home)
+        with patch("dot_claude.cli.inquirer") as mock_inq:
+            mock_inq.select.return_value.execute.return_value = f"User ({fake_home / '.claude'})"
+            result = runner.invoke(main, ["add", "my-skill"])
+            assert result.exit_code == 0
+            mock_inq.select.assert_called_once()
+            assert (fake_home / ".claude" / "skills" / "my-skill").is_symlink()
+
+    def test_add_mutually_exclusive_flags(self, runner, mock_env):
+        result = runner.invoke(main, ["add", "-g", "-p", "my-skill"])
+        assert result.exit_code != 0
+        assert "mutually exclusive" in result.output
 
 
 class TestAddConflict:
@@ -182,7 +212,7 @@ class TestAddConflict:
         # Mock inquirerpy to select first repo
         with patch("dot_claude.cli.inquirer") as mock_inq:
             mock_inq.select.return_value.execute.return_value = "repo-a"
-            result = runner.invoke(main, ["add", "shared-skill"])
+            result = runner.invoke(main, ["add", "-p", "shared-skill"])
             assert result.exit_code == 0
             mock_inq.select.assert_called_once()
 
@@ -194,15 +224,58 @@ class TestRemoveCommand:
         project_dir = mock_env / "project"
         project_dir.mkdir()
         monkeypatch.chdir(project_dir)
-        runner.invoke(main, ["add", "my-skill"])
-        result = runner.invoke(main, ["remove", "my-skill"])
+        runner.invoke(main, ["add", "-p", "my-skill"])
+        result = runner.invoke(main, ["remove", "-p", "my-skill"])
         assert result.exit_code == 0
+        assert "skills/my-skill" in result.output
         assert not (project_dir / ".claude" / "skills" / "my-skill").exists()
 
     def test_remove_not_installed(self, runner, mock_env, monkeypatch):
         project_dir = mock_env / "project"
         project_dir.mkdir()
         monkeypatch.chdir(project_dir)
-        result = runner.invoke(main, ["remove", "nonexistent"])
+        result = runner.invoke(main, ["remove", "-p", "nonexistent"])
         assert result.exit_code != 0
         assert "not installed" in result.output
+
+    def test_remove_from_user_scope(self, runner, mock_env, monkeypatch):
+        fake_home = mock_env / "home"
+        fake_home.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: fake_home)
+        runner.invoke(main, ["add", "-g", "my-skill"])
+        result = runner.invoke(main, ["remove", "-g", "my-skill"])
+        assert result.exit_code == 0
+        assert "skills/my-skill" in result.output
+        assert not (fake_home / ".claude" / "skills" / "my-skill").exists()
+
+    def test_remove_without_flags_shows_tui(self, runner, mock_env, monkeypatch):
+        project_dir = mock_env / "project"
+        project_dir.mkdir()
+        monkeypatch.chdir(project_dir)
+        runner.invoke(main, ["add", "-p", "my-skill"])
+        with patch("dot_claude.cli.inquirer") as mock_inq:
+            mock_inq.select.return_value.execute.return_value = f"Project ({project_dir / '.claude'})"
+            result = runner.invoke(main, ["remove", "my-skill"])
+            assert result.exit_code == 0
+            mock_inq.select.assert_called_once()
+            assert not (project_dir / ".claude" / "skills" / "my-skill").exists()
+
+    def test_remove_without_flags_tui_user_scope(self, runner, mock_env, monkeypatch):
+        fake_home = mock_env / "home"
+        fake_home.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: fake_home)
+        runner.invoke(main, ["add", "-g", "my-skill"])
+        with patch("dot_claude.cli.inquirer") as mock_inq:
+            mock_inq.select.return_value.execute.return_value = f"User ({fake_home / '.claude'})"
+            result = runner.invoke(main, ["remove", "my-skill"])
+            assert result.exit_code == 0
+            mock_inq.select.assert_called_once()
+            assert not (fake_home / ".claude" / "skills" / "my-skill").exists()
+
+    def test_remove_mutually_exclusive_flags(self, runner, mock_env, monkeypatch):
+        project_dir = mock_env / "project"
+        project_dir.mkdir()
+        monkeypatch.chdir(project_dir)
+        result = runner.invoke(main, ["remove", "-g", "-p", "my-skill"])
+        assert result.exit_code != 0
+        assert "mutually exclusive" in result.output

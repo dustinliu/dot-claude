@@ -29,11 +29,22 @@ def _load_all_artifacts() -> list[Artifact]:
     return artifacts
 
 
-def _scope_dir(global_flag: bool) -> Path:
-    """Return the target scope directory."""
+def _resolve_scope(global_flag: bool, project_flag: bool) -> Path:
+    """Return the target scope directory based on flags or interactive prompt."""
+    if global_flag and project_flag:
+        raise click.ClickException("Options -g and -p are mutually exclusive")
     if global_flag:
         return Path.home() / ".claude"
-    return Path.cwd() / ".claude"
+    if project_flag:
+        return Path.cwd() / ".claude"
+    # No flag — prompt user
+    project_path = Path.cwd() / ".claude"
+    user_path = Path.home() / ".claude"
+    choices = [f"Project ({project_path})", f"User ({user_path})"]
+    selected = inquirer.select(message="Select scope:", choices=choices).execute()
+    if selected == choices[0]:
+        return project_path
+    return user_path
 
 
 @click.group()
@@ -118,7 +129,8 @@ def list_cmd(global_scope: bool) -> None:
 @main.command()
 @click.argument("name")
 @click.option("-g", "global_scope", is_flag=True, help="Install to user scope (~/.claude/)")
-def add(name: str, global_scope: bool) -> None:
+@click.option("-p", "project_scope", is_flag=True, help="Install to project scope (./.claude/)")
+def add(name: str, global_scope: bool, project_scope: bool) -> None:
     """Add an artifact by creating a symlink."""
     try:
         artifacts = _load_all_artifacts()
@@ -140,10 +152,10 @@ def add(name: str, global_scope: bool) -> None:
         ).execute()
         artifact = next(a for a in matches if a.repo_name == selected)
 
-    scope = _scope_dir(global_scope)
+    scope = _resolve_scope(global_scope, project_scope)
     try:
-        create_symlink(artifact, scope)
-        click.echo(f"Symlinked {name} to {scope}/")
+        target = create_symlink(artifact, scope)
+        click.echo(f"Symlinked {name} to {target}")
     except DeployError as e:
         raise click.ClickException(str(e))
 
@@ -151,15 +163,16 @@ def add(name: str, global_scope: bool) -> None:
 @main.command()
 @click.argument("name")
 @click.option("-g", "global_scope", is_flag=True, help="Remove from user scope (~/.claude/)")
-def remove(name: str, global_scope: bool) -> None:
+@click.option("-p", "project_scope", is_flag=True, help="Remove from project scope (./.claude/)")
+def remove(name: str, global_scope: bool, project_scope: bool) -> None:
     """Remove an artifact symlink."""
-    scope = _scope_dir(global_scope)
+    scope = _resolve_scope(global_scope, project_scope)
 
     # Try skill first, then agent
     for kind in ("skill", "agent"):
         try:
-            remove_symlink(name, kind, scope)
-            click.echo(f"Removed {name} from {scope}/")
+            target = remove_symlink(name, kind, scope)
+            click.echo(f"Removed {name} from {target}")
             return
         except DeployError:
             continue

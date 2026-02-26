@@ -1,4 +1,4 @@
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Symlink skills to target scope
 The system SHALL create symlinks for skill artifacts from the cached repo to the target scope directory and return the full target path.
@@ -21,20 +21,6 @@ The system SHALL create symlinks for agent artifacts from the cached repo to the
 #### Scenario: Deploy agent to project scope
 - **WHEN** user adds an agent with `-p` flag or selects project scope from the TUI prompt
 - **THEN** system creates a symlink `./.claude/agents/<name>.md` → `$XDG_CACHE_HOME/dot-claude/<repo>/<agents-dir>/<name>.md` and returns the full target path `./.claude/agents/<name>.md`
-
-### Requirement: Create target directories
-The system SHALL create target scope directories if they do not exist.
-
-#### Scenario: Target directory missing
-- **WHEN** user adds an artifact and `~/.claude/skills/` (or agents, or project scope equivalent) does not exist
-- **THEN** system creates the directory before creating the symlink
-
-### Requirement: Prevent overwrite of existing symlinks
-The system SHALL not overwrite an existing symlink or file without user awareness.
-
-#### Scenario: Artifact already installed
-- **WHEN** user adds an artifact and a symlink or file already exists at the target path
-- **THEN** system displays an error indicating the artifact is already installed
 
 ### Requirement: Remove symlinks
 The system SHALL remove symlinks when the `remove` command is used and return the full target path that was removed.
@@ -61,18 +47,3 @@ The system SHALL display the full symlink target path (including the `skills/` o
 #### Scenario: Remove success message
 - **WHEN** user successfully removes an artifact named `my-skill` from project scope
 - **THEN** system displays "Removed my-skill from ./.claude/skills/my-skill" (not "./.claude/")
-
-### Requirement: Detect install status
-The system SHALL detect whether an artifact is installed and in which scope.
-
-#### Scenario: Check user scope
-- **WHEN** listing artifacts
-- **THEN** system checks `~/.claude/skills/<name>` and `~/.claude/agents/<name>.md` for existing symlinks
-
-#### Scenario: Check project scope
-- **WHEN** listing artifacts (without `-g`)
-- **THEN** system checks `./.claude/skills/<name>` and `./.claude/agents/<name>.md` for existing symlinks
-
-#### Scenario: Broken symlink detection
-- **WHEN** a symlink exists but its target no longer exists
-- **THEN** system treats the artifact as not installed (broken symlink)

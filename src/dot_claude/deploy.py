@@ -16,16 +16,17 @@ def _target_path(name: str, kind: str, scope_dir: Path) -> Path:
     return scope_dir / "agents" / f"{name}.md"
 
 
-def create_symlink(artifact: Artifact, scope_dir: Path) -> None:
+def create_symlink(artifact: Artifact, scope_dir: Path) -> Path:
     """Create a symlink for an artifact in the target scope directory."""
     target = _target_path(artifact.name, artifact.kind, scope_dir)
     if target.exists() or target.is_symlink():
         raise DeployError(f"'{artifact.name}' is already installed at {target}")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.symlink_to(artifact.source_path)
+    return target
 
 
-def remove_symlink(name: str, kind: str, scope_dir: Path) -> None:
+def remove_symlink(name: str, kind: str, scope_dir: Path) -> Path:
     """Remove a symlink for an artifact. Refuses to delete non-symlink files."""
     target = _target_path(name, kind, scope_dir)
     if not target.exists() and not target.is_symlink():
@@ -33,6 +34,7 @@ def remove_symlink(name: str, kind: str, scope_dir: Path) -> None:
     if not target.is_symlink():
         raise DeployError(f"'{name}' at {target} is not a managed symlink")
     target.unlink()
+    return target
 
 
 def detect_install_status(

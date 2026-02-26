@@ -73,8 +73,8 @@ dot-claude add my-skill
 | `dot-claude init` | Create config directory and generate example config | — |
 | `dot-claude update` | Clone new repos or pull latest changes for existing ones | — |
 | `dot-claude list` | List all available artifacts with install status | `-g` show user scope only |
-| `dot-claude add <name>` | Install an artifact by creating a symlink | `-g` install to user scope |
-| `dot-claude remove <name>` | Remove an installed artifact symlink | `-g` remove from user scope |
+| `dot-claude add <name>` | Install an artifact by creating a symlink | `-g` user scope, `-p` project scope |
+| `dot-claude remove <name>` | Remove an installed artifact symlink | `-g` user scope, `-p` project scope |
 
 ## Configuration
 
@@ -139,8 +139,10 @@ Artifacts can be installed at two scopes:
 
 | Scope | Flag | Target directory | Effect |
 |---|---|---|---|
-| **Project** (default) | — | `./.claude/skills/` or `./.claude/agents/` | Available only in the current project |
+| **Project** | `-p` | `./.claude/skills/` or `./.claude/agents/` | Available only in the current project |
 | **User** | `-g` | `~/.claude/skills/` or `~/.claude/agents/` | Available in all projects |
+
+When neither `-g` nor `-p` is specified, `add` and `remove` display an interactive prompt to select the scope. The flags `-g` and `-p` are mutually exclusive.
 
 ## How It Works
 
