@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: 'Execute git commit with conventional commit message analysis, intelligent staging, and message generation. Use when user asks to commit changes, create a git commit, or mentions "/commit". Supports: (1) Auto-detecting type and scope from changes, (2) Generating conventional commit messages from diff, (3) Interactive commit with optional type/scope/description overrides, (4) Intelligent file staging for logical grouping'
+description: 'Use when user says "commit", "commit changes", "git commit", "make a commit", "create a commit", or mentions "/commit". Also use when user asks to stage and commit, write a commit message, or split changes into multiple commits.'
 license: MIT
 allowed-tools: Bash
 model: sonnet

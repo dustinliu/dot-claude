@@ -2,6 +2,7 @@
 name: creating-todo
 description: Use when the user wants to create a todo, add a task, or add a to-do in Things. Triggers include "things todo", "things task", "add to Things", "create a Things todo".
 allowed-tools: Bash, mcp__things__get_projects, mcp__things__add_todo, mcp__things__add_project, AskUserQuestion
+model: Haiku
 ---
 
 # Creating Todo

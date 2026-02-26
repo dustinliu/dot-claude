@@ -1,10 +1,10 @@
 ---
 name: leading-change
 description: >-
-  Coach through planning team/organizational initiatives — AI adoption,
-  automation culture, process rollouts, or any desired future state.
-  Triggers on "initiative", "change plan", "adoption strategy",
-  "team transformation", or when describing a desired team future state.
+  Use when user mentions "initiative", "change plan", "adoption strategy",
+  "team transformation", or describes a desired team/organizational future state.
+  Also use for AI adoption planning, automation culture rollouts, or process change initiatives.
+model: opus
 ---
 
 # Leading Change
