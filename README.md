@@ -12,23 +12,58 @@ dot-claude lets you maintain a curated collection of Claude Code skills and agen
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
 - git
 
+## Installation
+
+### Persistent install (recommended)
+
+```bash
+uv tool install git+ssh://git@github.com/dustinliu/dot-claude.git
+```
+
+This installs `dot-claude` globally so you can run it directly:
+
+```bash
+dot-claude init
+dot-claude update
+```
+
+To upgrade to the latest version:
+
+```bash
+uv tool upgrade dot-claude
+```
+
+If upgrade doesn't pick up changes (e.g., no version bump), force reinstall:
+
+```bash
+uv tool install --force git+ssh://git@github.com/dustinliu/dot-claude.git
+```
+
+### One-off execution (no install)
+
+```bash
+uvx --from git+ssh://git@github.com/dustinliu/dot-claude.git dot-claude init
+```
+
+This runs the tool in a temporary environment without installing it permanently. Each invocation re-fetches the package.
+
 ## Getting Started
 
 ```bash
 # 1. Create the config file
-uvx dot-claude init
+dot-claude init
 
 # 2. Edit the config to add your artifact repos
 #    (see Configuration section below)
 
 # 3. Clone all configured repos
-uvx dot-claude update
+dot-claude update
 
 # 4. See what's available
-uvx dot-claude list
+dot-claude list
 
 # 5. Install an artifact into the current project
-uvx dot-claude add my-skill
+dot-claude add my-skill
 ```
 
 ## Commands
