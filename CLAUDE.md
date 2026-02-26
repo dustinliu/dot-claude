@@ -4,16 +4,28 @@ Development guide for the dot-claude CLI tool. For installation, usage, and conf
 
 ## Rules (**MUST follow — no exceptions**)
 
-Read these rules FIRST. Every task MUST comply with ALL rules below. Do NOT skip or defer any of them.
+Read these rules FIRST. Every task must comply with all rules below.
 
 1. All instruction content MUST be written in English; user-facing communication preferences are defined in the user's global CLAUDE.md.
 2. README.md is the user manual (installation, usage, commands, configuration, artifact format). CLAUDE.md is for development only (architecture, code structure, testing, contribution rules). User-facing documentation MUST NOT be placed in CLAUDE.md; development-only content MUST NOT be placed in README.md.
-3. After any change that affects project structure, files, deployment, or rules, you MUST update this CLAUDE.md to reflect the current state. If the change affects user-facing behavior (commands, flags, configuration, artifact format, scopes), you MUST also update README.md. A task is NOT complete until all affected documentation is accurate.
+3. After completing a task, check whether documentation needs updating:
+   - **CLAUDE.md** — update when: module added/removed/renamed, architecture change, new test convention, rule change.
+   - **README.md** — update when: command added/removed/renamed, flag changed, config field changed, artifact format changed, scope behavior changed.
+   A task is NOT complete until all affected documentation is accurate.
 4. Follow TDD (Test-Driven Development) — do NOT skip any step of the red-green-refactor cycle:
    - **Red**: write a failing test first, run it to confirm it fails.
    - **Green**: write the minimum production code to make the test pass, run it to confirm it passes.
    - **Refactor**: clean up while keeping all tests green.
-   Do NOT write production code without a corresponding test.
+   Do NOT write production code without a corresponding test. If you realize you wrote production code first, STOP — write the test before continuing.
+
+### Task Completion Checklist
+
+Before declaring any task complete, verify each item:
+
+- [ ] All new/changed behavior has corresponding tests (TDD: red → green → refactor)
+- [ ] `uv run pytest` passes
+- [ ] CLAUDE.md reflects current project state (if architecture, structure, or rules changed)
+- [ ] README.md reflects current user-facing behavior (if commands, flags, config, or scopes changed)
 
 ## Repository Structure
 
