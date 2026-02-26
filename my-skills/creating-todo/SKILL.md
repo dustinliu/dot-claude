@@ -1,6 +1,6 @@
 ---
 name: creating-todo
-description: Use ONLY when the user explicitly mentions "Things" and wants to add a task to Things to-do list
+description: Use when the user wants to create a todo, add a task, or add a to-do in Things. Triggers include "things todo", "things task", "add to Things", "create a Things todo".
 allowed-tools: Bash, mcp__things__get_projects, mcp__things__add_todo, mcp__things__add_project, AskUserQuestion
 ---
 
@@ -21,24 +21,19 @@ Add current work as **exactly one** to-do item in Things, mapped to the correct 
 - If user provided a description → use it directly
 - Otherwise → summarize current work from conversation context, confirm with user before continuing
 
-### 2. Detect current project name
+### 2. Detect current project name (git repos only)
 
-1. In a git repo (including worktrees) → `git worktree list --porcelain 2>/dev/null | head -1 | sed 's/^worktree //' | xargs basename`
-2. Not in git → `basename "$PWD"`
+In a git repo (including worktrees) → `git worktree list --porcelain 2>/dev/null | head -1 | sed 's/^worktree //' | xargs basename`
 
-### 3. Confirm Things project with user (always required)
+If not in a git repo, skip to step 3 (will ask user directly).
 
-Call `mcp__things__get_projects` to list all projects, then do a case-insensitive partial match.
+### 3. Resolve Things project
 
-**Always use `AskUserQuestion` to confirm the project with the user**, regardless of whether a match was found:
+Call `mcp__things__get_projects` to list all projects, then do a case-insensitive partial match against the name from step 2.
 
-- Match found → ask: *"I found Things project 'X'. Is this the right project?"*
-  - User says yes → proceed
-  - User says no → ask: *"Which Things project should I add this to?"*
-  - User gives a project name directly → use that name and proceed
-- No match found → ask: *"Which Things project should I add this to?"*
-
-Never proceed to step 4 without an explicit answer from the user.
+- **In a git repo + match found** → use it directly, no confirmation needed
+- **In a git repo + no match** → ask: *"No matching Things project found for 'X'. Which project should I add this to?"*
+- **Not in a git repo** → ask: *"Which Things project should I add this to?"*
 
 ### 4. Create project if needed
 
@@ -62,6 +57,6 @@ Only call `mcp__things__add_todo` with the project's UUID after user confirms. P
 
 - **Only activate** when the user explicitly mentions "Things"
 - **One todo per invocation** — never call `mcp__things__add_todo` more than once
-- **Always** confirm the Things project with the user via `AskUserQuestion` — even when a confident match is found
+- **In a git repo with a matching Things project** → use it automatically without confirmation
 - **Never** add a to-do without showing details and waiting for approval
 - **Never** pass extra fields (`when`, `tags`, `deadline`, etc.) to `mcp__things__add_todo` unless user explicitly requests them
