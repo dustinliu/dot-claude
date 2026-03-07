@@ -10,9 +10,12 @@ description: >-
   persist, retrieve, or edit personal knowledge when no external service (Jira,
   GitHub, Confluence, Linear, Things, Slack, email) is explicitly specified. Also
   trigger on any mention of "Obsidian", "vault", or "my notes".
+argument-hint: [note-request]
 ---
 
 # Obsidian Notes
+
+If `$ARGUMENTS` is provided, treat it as the user's note request and proceed directly without asking for clarification.
 
 ## Overview
 

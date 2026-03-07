@@ -2,6 +2,7 @@
 name: creating-todo
 description: Use when the user wants to create a todo, add a task, or add a to-do in Things. Triggers include "things todo", "things task", "add to Things", "create a Things todo".
 allowed-tools: Bash, mcp__things__get_projects, mcp__things__add_todo, mcp__things__add_project, AskUserQuestion
+argument-hint: [todo-description]
 ---
 
 # Creating Todo
@@ -18,7 +19,8 @@ Add current work as **exactly one** to-do item in Things, mapped to the correct 
 
 ### 1. Prepare task content
 
-- If user provided a description → use it directly
+- If `$ARGUMENTS` is provided → use it directly as the todo title/description
+- If user provided a description in the message → use it directly
 - Otherwise → summarize current work from conversation context, confirm with user before continuing
 
 ### 2. Detect current project name (git repos only)
