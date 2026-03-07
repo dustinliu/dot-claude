@@ -39,6 +39,7 @@ venv/
 
 # Temporary files
 *.tmp
+tmp/
 .temporary
 
 # local Claude Code settings
@@ -46,3 +47,6 @@ settings.local.json
 
 # skills.sh
 skills-lock.json
+
+# Obsidian notes workspace (local only)
+obsidian-notes-workspace/

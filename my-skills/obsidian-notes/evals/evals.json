@@ -1,0 +1,80 @@
+{
+  "skill_name": "obsidian-notes",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "幫我查一下 API Gateway Migration 這個 Obsidian 專案筆記的目前狀態和最新進度。",
+      "expected_output": "Claude should use read_note(\"Work/Projects/API-Gateway-Migration/API-Gateway-Migration.md\") with a vault-relative path, NOT the Read tool with an absolute path. It should explain it cannot actually access the vault but describe the correct approach.",
+      "files": [],
+      "expectations": [
+        "Uses MCP read_note tool or explicitly references read_note() — not the Read filesystem tool",
+        "Uses vault-relative path format like 'Work/Projects/...' without /Users/dustinl prefix",
+        "Does NOT attempt to use Glob, Grep, or Read filesystem tools for the vault query",
+        "Response describes or attempts the correct MCP-based lookup approach"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "幫我在 Obsidian 建立今天跟 Jim 和 Sarah 的 Security Review 會議記錄，主要決議是 Q1 結束前完成 PCI compliance 稽核。",
+      "expected_output": "Claude should use create_note() with vault-relative path Work/Meetings/YYYY/MM/Security-Review YYYY-MM-DD.md, proper frontmatter (title, date, attendees, status: draft), and correct Obsidian meeting template structure.",
+      "files": [],
+      "expectations": [
+        "Uses create_note MCP tool — not Write filesystem tool",
+        "Path follows Work/Meetings/YYYY/MM/ format with vault-relative path (no /Users/dustinl prefix)",
+        "Frontmatter includes required fields: title, date, attendees, status",
+        "status field is set to 'draft' (not 'final' or any other value) for a newly created meeting note",
+        "Meeting note has proper Obsidian markdown structure with content about PCI compliance decision"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "幫我在 Obsidian 記錄一個技術筆記：我研究了 PostgreSQL connection pooling 的最佳實踐，主要是關於 PgBouncer 的設定方式和 pool modes 的比較。",
+      "expected_output": "Claude should consult note-organization.md and create the note under Dev/ (technical content), with an English filename following CamelCase/kebab-case convention, required frontmatter (title, created, updated, tags), and tags drawn from the standard vocabulary (e.g., technical, database, documentation). Should verify creation with read_note after creating.",
+      "files": [],
+      "expectations": [
+        "Uses create_note MCP tool — not Write filesystem tool",
+        "Path is vault-relative under Dev/ directory (technical research belongs in Dev/, not Work/)",
+        "Frontmatter includes all four required fields: title, created, updated, tags",
+        "Tags follow the standard classification vocabulary (e.g., technical, database, documentation, draft) — not arbitrary invented tags",
+        "Verifies the note was created successfully with read_note after calling create_note"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "幫我更新 Work/Projects/API-Gateway-Migration/API-Gateway-Migration.md 這個專案筆記的 'Current Status' section，把內容改成：Migration completed. All services running on new gateway as of 2026-03-07.",
+      "expected_output": "Claude should use patch_note(path, content, heading='Current Status') to update only the specified section — NOT rewrite the whole note with create_note or use append_note.",
+      "files": [],
+      "expectations": [
+        "Uses patch_note MCP tool with the heading parameter set to 'Current Status'",
+        "Does NOT use create_note (which would overwrite the whole note)",
+        "Does NOT use append_note (which appends instead of replacing a section)",
+        "Path is vault-relative: Work/Projects/API-Gateway-Migration/API-Gateway-Migration.md",
+        "Updated content mentions the completion date 2026-03-07"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "幫我在 Obsidian 的 Daily Note 新增一條記錄：今天成功把 auth service 的流量切換到新 gateway，整體很順利。我的 Daily Notes 都放在 DailyNote/YYYY/MM/YYYY-MM-DD.md，今天是 2026-03-07。",
+      "expected_output": "Even though the user explicitly mentions the DailyNote path format, Claude should still use append_periodic_note(period='daily') — NOT construct the path manually and call append_note('DailyNote/2026/03/2026-03-07.md', ...).",
+      "files": [],
+      "expectations": [
+        "Uses mcp__obsidian__append_periodic_note or mcp__obsidian__patch_periodic_note with period='daily'",
+        "Does NOT call append_note with a manually-constructed path like DailyNote/2026/03/2026-03-07.md",
+        "Does NOT call create_note with a manually-constructed dated path",
+        "Content includes the key detail about auth service traffic cutover"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "幫我讀一下我在 Dev/Infrastructure/Kubernetes.md 存的 Kubernetes 部署策略筆記。",
+      "expected_output": "When read_note returns 404, Claude should call list_files on the parent directory (Dev/Infrastructure/ or Dev/) to find close matches, then read and return the correct note — not just report an error and stop.",
+      "files": [],
+      "expectations": [
+        "Calls mcp__obsidian__read_note first as a reasonable first attempt",
+        "When read_note fails (404 or error), calls mcp__obsidian__list_files on a parent directory to find close matches",
+        "Informs the user of the actual path used or alternative notes found",
+        "Does NOT immediately give up after the first failure without attempting recovery"
+      ]
+    }
+  ]
+}
