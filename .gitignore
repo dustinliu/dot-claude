@@ -50,3 +50,5 @@ skills-lock.json
 
 # Obsidian notes workspace (local only)
 obsidian-notes-workspace/
+
+.devenv
