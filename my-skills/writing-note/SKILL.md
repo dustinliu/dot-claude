@@ -1,5 +1,5 @@
 ---
-name: obsidian-notes
+name: writing-note
 description: >-
   Use this skill to read, write, search, or modify files in the user's local
   Obsidian vault (markdown notes). This is the user's personal knowledge base
