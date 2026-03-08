@@ -11,6 +11,7 @@ description: >-
   GitHub, Confluence, Linear, Things, Slack, email) is explicitly specified. Also
   trigger on any mention of "Obsidian", "vault", or "my notes".
 argument-hint: [note-request]
+model: sonnet
 ---
 
 # Obsidian Notes
@@ -20,6 +21,18 @@ If `$ARGUMENTS` is provided, treat it as the user's note request and proceed dir
 ## Overview
 
 Standard operations for reading, writing, and organizing notes in the Obsidian vault (Obsidian Flavored Markdown with YAML frontmatter and wikilinks). All vault operations use Obsidian MCP tools with vault-relative paths.
+
+## Companion Skills
+
+Obsidian supports more than plain markdown notes. Before proceeding, consider whether the user's request is better served by one of these formats:
+
+| Skill | Format | When to use |
+|-------|--------|-------------|
+| `obsidian-markdown` | `.md` | **Always invoke** when creating or editing notes — ensures correct Obsidian Flavored Markdown (wikilinks, callouts, embeds, properties) |
+| `obsidian-bases` | `.base` | User wants a database view, filtered table, card gallery, or summary of notes by properties |
+| `json-canvas` | `.canvas` | User wants a visual layout — mind map, flowchart, project board, or spatial arrangement of ideas |
+
+Invoke the relevant skill(s) before writing content so you follow the correct syntax.
 
 ## Quick Operations
 
