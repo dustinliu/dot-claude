@@ -36,8 +36,8 @@ list_files("Work/Meetings/YYYY/MM") → for each file:
 |-----------|------|-------|
 | **Query meetings** | `list_files` + `read_note` | 1. `list_files("Work/Meetings/YYYY/MM")` 2. `read_note` each file 3. Filter by status |
 | **Create meeting** | `create_note` | 1. Fill out `assets/meeting.md` template 2. `create_note(path, content)` |
-| **Update status** | `patch_note` | `patch_note(path, content)` with updated frontmatter |
-| **Add content** | `patch_note` | `patch_note(path, content, heading)` to update a section |
+| **Update status** | `patch_note` | Update the frontmatter `status` field |
+| **Add content** | `patch_note` | Target the relevant heading section |
 | **Search meetings** | `search` | `search("project: ProjectX")` or content keywords |
 
 **Update status example**:
@@ -69,7 +69,7 @@ status: reviewed
 |-------------|-----------|-----------|
 | Review meetings | `list_files` + `read_note` | List directory, read each file, filter by status |
 | Create meeting | `create_note` | Fill in template, specify vault-relative path, create note |
-| Update status | `patch_note` | Update frontmatter (no heading argument) |
+| Update status | `patch_note` | Update frontmatter `status` field |
 | Query specific meeting | `list_files` + `read_note` | List directory, read matching file |
 | Search keywords | `search` | Search content across meetings |
 

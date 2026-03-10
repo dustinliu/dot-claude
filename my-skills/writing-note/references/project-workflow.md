@@ -93,10 +93,7 @@ If spanning multiple projects → Batch query and summarize (Scenario 5)
    ↓
 3. Locate the corresponding section or frontmatter field
    ↓
-4. Update the file:
-   - Modify frontmatter → patch_note(path, content)  [no heading]
-   - Modify a section → patch_note(path, content, heading=<section title>)
-   - Append new content → append_note(path, content)
+4. Update the relevant section or frontmatter field
    ↓
 5. Update frontmatter `updated: YYYY-MM-DD` via patch_note
    ↓
@@ -320,15 +317,15 @@ When modifying, do not assume the location of content — always refer to the co
 
 ---
 
-## Workflow and Tool Mapping
+## Workflow Summary
 
-| Scenario | Primary Tool | Supporting Tool | Verification Method |
-|---|---|---|---|
-| Scenario 1: Explicit name | `read_note` | — | Read file directly |
-| Scenario 2: Fuzzy name | `list_files` | `read_note` for details | List results |
-| Scenario 3: Project does not exist | `create_note` | `read_note` for verification | Verify after creation |
-| Scenario 4: Modify / update | `patch_note` or `append_note` | Content mapping judgment | Re-read with `read_note` |
-| Scenario 5: Cross-project query | `list_files` + `read_note` | `search_query` DQL | Review results |
+| Scenario | Verification Method |
+|---|---|
+| Scenario 1: Explicit name | Read file directly |
+| Scenario 2: Fuzzy name | List results for user to confirm |
+| Scenario 3: Project does not exist | Re-read after creation |
+| Scenario 4: Modify / update | Re-read after modification |
+| Scenario 5: Cross-project query | Review compiled results |
 
 ---
 
@@ -344,7 +341,7 @@ A: Treat the Obsidian note as the primary source and notify the user of the disc
 A: Refer to the content type mapping table (see the mapping table in "Scenario 4")
 
 **Q: Modification involves complex formatting?**
-A: Use `read_note` to examine the existing format, then use `patch_note(path, content, heading)` for a precise update
+A: Use `read_note` to examine the existing format, then use `patch_note` to target the specific section heading
 
 **Q: Multiple modifications to the same project on the same day?**
 A: Update the `updated` timestamp on every modification; do not duplicate earlier edits

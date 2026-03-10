@@ -34,21 +34,6 @@ Obsidian supports more than plain markdown notes. Before proceeding, consider wh
 
 Invoke the relevant skill(s) before writing content so you follow the correct syntax.
 
-## Quick Operations
-
-| Operation | Tool |
-|-----------|------|
-| Read a note | `read_note(path)` |
-| List files in directory | `list_files(path)` |
-| Search by content | `search(query)` |
-| Search with Dataview DQL | `search_query(query)` |
-| Create a note | `create_note(path, content)` |
-| Edit a section | `patch_note(path, content, heading)` — attempt directly, no need to read first |
-| Edit frontmatter | `patch_note(path, content)` (no heading) |
-| Append to note | `append_note(path, content)` |
-| DailyNote append | `append_periodic_note(period="daily", content=...)` |
-| DailyNote section update | `patch_periodic_note(period="daily", heading=..., content=...)` |
-
 ## Directory Structure
 
 Top-level categories: `Work/`, `Dev/`, `Games/`, `Personal/`, `Travel/`, `DailyNote/`
