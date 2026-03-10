@@ -23,8 +23,10 @@ Present the summary in this format before asking for approval:
 
 ```
 Files to stage:
-  - path/to/file1
-  - path/to/file2
+  A path/to/new-file
+  M path/to/changed-file
+  D path/to/removed-file
+  R old/path → new/path
 
 Commit message:
   <type>(<scope>): <description>
