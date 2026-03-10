@@ -13,9 +13,26 @@ Create standardized git commits using Conventional Commits. Analyze the diff and
 ## Workflow
 
 1. **Analyze**: Run `git diff --staged` (or `git diff` if nothing staged) and `git status --porcelain`
-2. **Stage**: Propose files to stage — **wait for user confirmation** before running `git add`
-3. **Draft**: Generate commit message from the diff (type, scope, description)
-4. **Commit**: Show the full commit command — **wait for user confirmation** before executing
+2. **Draft**: Generate commit message from the diff (type, scope, description)
+3. **Present**: Show a single confirmation summary with both the files to stage and the commit message, then **wait for user approval**
+4. **Execute**: After approval, run `git add` and `git commit` together in one step
+
+### Confirmation Summary Format
+
+Present the summary in this format before asking for approval:
+
+```
+Files to stage:
+  - path/to/file1
+  - path/to/file2
+
+Commit message:
+  <type>(<scope>): <description>
+
+  <optional body>
+
+  Co-Authored-By: ...
+```
 
 ## Grouping Changes
 
@@ -24,13 +41,11 @@ If the diff contains multiple unrelated changes, propose splitting into separate
 - Stage specific files per logical group: `git add path/to/file1 path/to/file2`
 - Use `git add -p` for partial file staging
 - One logical change per commit
+- Show a separate confirmation summary for each commit
 
 ## Interactive Confirmation (Required)
 
-- Before `git add`: list intended files and wait for approval
-- Before `git commit`: display the full command and wait for approval
-
-Never stage or commit without explicit user approval.
+Show the files to stage and the commit message together in a single confirmation. Never stage or commit without explicit user approval.
 
 ## Co-Authored-By
 
