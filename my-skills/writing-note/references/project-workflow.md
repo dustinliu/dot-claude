@@ -95,7 +95,7 @@ If spanning multiple projects → Batch query and summarize (Scenario 5)
    ↓
 4. Update the relevant section or frontmatter field
    ↓
-5. Update frontmatter `updated: YYYY-MM-DD` via patch_note
+5. Update frontmatter `updated: YYYY-MM-DD` via `property_set`
    ↓
 6. Verify the modification succeeded (re-read with read_note)
    ↓
@@ -302,8 +302,7 @@ On hold - awaiting client feedback on requirements
 1. `list_files("Work/Projects")` → get all project directories
 2. `read_note(path)` for each project's main note
 3. Filter by condition (e.g., `status: active` in frontmatter)
-4. Alternatively: `search_query('TABLE status FROM "Work/Projects" WHERE status = "active"')` for Dataview DQL
-5. Compile results into a table
+4. Compile results into a table
 
 ---
 
@@ -341,7 +340,7 @@ A: Treat the Obsidian note as the primary source and notify the user of the disc
 A: Refer to the content type mapping table (see the mapping table in "Scenario 4")
 
 **Q: Modification involves complex formatting?**
-A: Use `read_note` to examine the existing format, then use `patch_note` to target the specific section heading
+A: Use `read_note` to examine the existing format, then follow the Note Update Workflow in SKILL.md to integrate changes
 
 **Q: Multiple modifications to the same project on the same day?**
 A: Update the `updated` timestamp on every modification; do not duplicate earlier edits

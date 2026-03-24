@@ -1,25 +1,25 @@
-# Meeting Records Review Guide
+# Meeting Records Workflow
 
 Complete rules and workflows for managing and querying meeting records.
 
 ---
 
-## 📁 Structure
+## Structure
 
-**Path**: `Work/Meetings/YYYY/MM/[title] YYYY-MM-DD.md`
+**Path**: `Work/Meetings/YYYY/MM/[Title] YYYY-MM-DD.md`
 **Naming**: `[Title] YYYY-MM-DD.md` (e.g., `Security-Review 2026-02-15.md`)
 
 Detailed Frontmatter → see `assets/meeting.md`
 
 ---
 
-## 🔍 Core Query Rules
+## Core Query Rules
 
 **Decision logic** (based on the `status` field):
 
 | Status | Display | Purpose |
 |--------|---------|---------|
-| `reviewed` ✅ | Show only `[✅ REVIEWED] Title` | Confirmed, skip content |
+| `reviewed` | Show only `[REVIEWED] Title` | Confirmed, skip content |
 | `draft` | Full content + Frontmatter | Pending review, needs inspection |
 
 **Operation flow**:
@@ -30,14 +30,14 @@ list_files("Work/Meetings/YYYY/MM") → for each file:
 
 ---
 
-## 📝 Common Operations
+## Common Operations
 
 | Operation | Tool | Steps |
 |-----------|------|-------|
 | **Query meetings** | `list_files` + `read_note` | 1. `list_files("Work/Meetings/YYYY/MM")` 2. `read_note` each file 3. Filter by status |
 | **Create meeting** | `create_note` | 1. Fill out `assets/meeting.md` template 2. `create_note(path, content)` |
-| **Update status** | `patch_note` | Update the frontmatter `status` field |
-| **Add content** | `patch_note` | Target the relevant heading section |
+| **Update status** | `property_set` | `property_set(file, "status", "reviewed")` |
+| **Add content** | `read_note` + rewrite | Follow the Note Update Workflow in SKILL.md — read, integrate, overwrite |
 | **Search meetings** | `search` | `search("project: ProjectX")` or content keywords |
 
 **Update status example**:
@@ -45,13 +45,13 @@ list_files("Work/Meetings/YYYY/MM") → for each file:
 # Before
 status: draft
 
-# After
+# After (via property_set)
 status: reviewed
 ```
 
 ---
 
-## 📋 Scenario Examples
+## Scenario Examples
 
 ### Scenario 1: Review meetings on a specific date
 **Request**: "review meetings from 2026-02-09"
@@ -63,24 +63,24 @@ status: reviewed
 
 ---
 
-## ⚡ Quick Reference
+## Quick Reference
 
 | User request | Core tools | Key steps |
 |-------------|-----------|-----------|
 | Review meetings | `list_files` + `read_note` | List directory, read each file, filter by status |
 | Create meeting | `create_note` | Fill in template, specify vault-relative path, create note |
-| Update status | `patch_note` | Update frontmatter `status` field |
+| Update status | `property_set` | Set frontmatter `status` field |
 | Query specific meeting | `list_files` + `read_note` | List directory, read matching file |
 | Search keywords | `search` | Search content across meetings |
 
 ---
 
-## 🚫 Prohibited Operations
+## Prohibited Operations
 
-1. ❌ Do not manage meeting records in DailyNote — manage only under `Work/Meetings/`
-2. ❌ Do not mix multiple sources — single source of truth: `Work/Meetings/`
-3. ❌ Do not ignore the status field — it is the sole source determining display behavior (values can only be `draft` or `reviewed`)
-4. ❌ Do not omit frontmatter fields when creating — this affects subsequent queries and display
+1. Do not manage meeting records in DailyNote — manage only under `Work/Meetings/`
+2. Do not mix multiple sources — single source of truth: `Work/Meetings/`
+3. Do not ignore the status field — it determines display behavior (values: `draft` or `reviewed`)
+4. Do not omit frontmatter fields when creating — this affects subsequent queries and display
 
 ---
 

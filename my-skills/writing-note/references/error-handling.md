@@ -16,11 +16,11 @@
 
 **400 error** — query syntax is wrong or the search plugin is unavailable. Fix the query and retry:
 - Simplify or rephrase the search term
-- Switch to `search_query` with DQL (e.g. `TABLE FROM "" WHERE contains(file.content, "keyword")`)
+- Try different keywords or partial matches
 
 **Empty results** — search worked but found nothing. The content may still exist:
-1. Try `search_query` with a DQL content search
-2. If still empty, do a targeted manual scan — list and read files in the most likely directories based on context (e.g. searching for a project → start with `Work/Projects/`). Stop as soon as matches are found; don't scan the entire vault.
+1. Retry `search` with broader or alternative keywords
+2. If still empty, do a targeted manual scan — `list_files` + `read_note` in the most likely directories based on context (e.g. searching for a project → start with `Work/Projects/`). Stop as soon as matches are found; don't scan the entire vault.
 
 ---
 
