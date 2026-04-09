@@ -11,7 +11,7 @@ User mentions a project
     ↓
 Identify project name and operation type (query / create / modify)
     ↓
-Look up in Work/Projects/
+Look up in Projects/
     ├─ Exact match found → Read and respond (Scenario 1)
     ├─ Fuzzy or multiple matches → Ask user to confirm (Scenario 2)
     └─ Not found → Ask whether to create (Scenario 3)
@@ -27,7 +27,7 @@ If spanning multiple projects → Batch query and summarize (Scenario 5)
 **Precondition**: User explicitly mentions a project name and the note exists
 
 **Steps**:
-1. `read_note("Work/Projects/[ProjectName]/[ProjectName].md")`
+1. `Read("~/Documents/obsidian/My Note/Projects/[ProjectName]/[ProjectName].md")`
 2. Scan frontmatter (status, Jira, created/updated dates) and content
 3. Extract progress, Jira tickets, deadlines
 4. Respond to user
@@ -41,7 +41,7 @@ If spanning multiple projects → Batch query and summarize (Scenario 5)
 **Precondition**: Name is ambiguous or search returns multiple results
 
 **Steps**:
-1. `list_files("Work/Projects")` → scan available project directories
+1. `Glob("~/Documents/obsidian/My Note/Projects/**/*.md")` → scan available project directories
 2. List all results (name + brief description)
 3. Ask user to confirm
 4. Execute Scenario 1
@@ -50,14 +50,14 @@ If spanning multiple projects → Batch query and summarize (Scenario 5)
 
 ## Scenario 3: Project Does Not Exist - Create
 
-**Precondition**: Note not found in `Work/Projects/`
+**Precondition**: Note not found in `Projects/`
 
 **Steps**:
 1. Notify user that the project was not found
 2. Ask whether to create it
 3. If confirmed, collect required information: project name, short description, Jira code (optional)
-4. Compose content from `assets/project.md` template, then `create_note("Work/Projects/[ProjectName]/[ProjectName].md", content)`
-5. Verify: `read_note(path)` to confirm the file was created
+4. Compose content from `assets/project.md` template, then `Write` to `~/Documents/obsidian/My Note/Projects/[ProjectName]/[ProjectName].md`
+5. Verify: `Read` the file to confirm it was created
 6. Notify user that creation is complete
 
 ---
@@ -87,17 +87,17 @@ If spanning multiple projects → Batch query and summarize (Scenario 5)
 ### Modification Execution Flow
 
 ```
-1. read_note("Work/Projects/[ProjectName]/[ProjectName].md")
+1. Read("~/Documents/obsidian/My Note/Projects/[ProjectName]/[ProjectName].md")
    ↓
 2. Determine content type and location based on content signals (see table above)
    ↓
 3. Locate the corresponding section or frontmatter field
    ↓
-4. Update the relevant section or frontmatter field
+4. Update the relevant section or frontmatter field using Edit
    ↓
-5. Update frontmatter `updated: YYYY-MM-DD` via `property_set`
+5. Update frontmatter `updated: YYYY-MM-DD` using Edit
    ↓
-6. Verify the modification succeeded (re-read with read_note)
+6. Verify the modification succeeded (re-read with Read)
    ↓
 7. Confirm completion: "Updated [ProjectName]: [location and brief summary]"
 ```
@@ -299,8 +299,8 @@ On hold - awaiting client feedback on requirements
 **Precondition**: Query involves information from multiple projects (e.g., "all active projects")
 
 **Steps**:
-1. `list_files("Work/Projects")` → get all project directories
-2. `read_note(path)` for each project's main note
+1. `Glob("~/Documents/obsidian/My Note/Projects/**/*.md")` → get all project main notes
+2. `Read(path)` for each project's main note
 3. Filter by condition (e.g., `status: active` in frontmatter)
 4. Compile results into a table
 
@@ -308,7 +308,7 @@ On hold - awaiting client feedback on requirements
 
 ## Prohibited Operations
 
-Do not search for project primary information in Things, DailyNote, or other directories — the single source of truth is `Work/Projects/` (project-related todos may still be queried from Things)
+Do not search for project primary information in Things, DailyNote, or other directories — the single source of truth is `Projects/` (project-related todos may still be queried from Things)
 
 Do not create duplicate project notes without confirmation
 
@@ -331,7 +331,7 @@ When modifying, do not assume the location of content — always refer to the co
 ## FAQ
 
 **Q: Project name has a different spelling?**
-A: Use `list_files("Work/Projects")` to browse all projects, list results for user to confirm (see Scenario 2)
+A: Use `Glob("~/Documents/obsidian/My Note/Projects/**/*.md")` to browse all projects, list results for user to confirm (see Scenario 2)
 
 **Q: Jira and Obsidian information are inconsistent?**
 A: Treat the Obsidian note as the primary source and notify the user of the discrepancy
@@ -340,7 +340,7 @@ A: Treat the Obsidian note as the primary source and notify the user of the disc
 A: Refer to the content type mapping table (see the mapping table in "Scenario 4")
 
 **Q: Modification involves complex formatting?**
-A: Use `read_note` to examine the existing format, then follow the Note Update Workflow in SKILL.md to integrate changes
+A: Use `Read` to examine the existing format, then follow the Note Update Workflow in SKILL.md to integrate changes
 
 **Q: Multiple modifications to the same project on the same day?**
 A: Update the `updated` timestamp on every modification; do not duplicate earlier edits

@@ -14,13 +14,9 @@
 
 ## Search Fallback
 
-**400 error** — query syntax is wrong or the search plugin is unavailable. Fix the query and retry:
-- Simplify or rephrase the search term
-- Try different keywords or partial matches
-
-**Empty results** — search worked but found nothing. The content may still exist:
-1. Retry `search` with broader or alternative keywords
-2. If still empty, do a targeted manual scan — `list_files` + `read_note` in the most likely directories based on context (e.g. searching for a project → start with `Work/Projects/`). Stop as soon as matches are found; don't scan the entire vault.
+**Empty results** — `Grep` found nothing. The content may still exist:
+1. Retry `Grep` with broader or alternative keywords / regex patterns
+2. If still empty, do a targeted manual scan — `Glob` + `Read` in the most likely directories based on context (e.g. searching for a project → start with `~/Documents/obsidian/My Note/Projects/`). Stop as soon as matches are found; don't scan the entire vault.
 
 ---
 

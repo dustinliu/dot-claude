@@ -65,7 +65,7 @@ These tickets landed on the user and are waiting for a decision — typically to
 **Query B — Project health: blockers and at-risk tickets:**
 
 Don't query entire projects — that returns hundreds of tickets. Instead:
-1. Read all active Obsidian project notes (`list_files("Work/Projects")`, then read each `[ProjectName]/[ProjectName].md`)
+1. Read all active Obsidian project notes (`Glob("~/Documents/obsidian/My Note/Projects/**/*.md")`, then `Read` each `[ProjectName]/[ProjectName].md`)
 2. Extract ticket keys from the `Related Jira Issues` section of each note (format: `[TWECP-123]`, `[TWPE-456]`, etc.)
 3. Query only those specific tickets:
 ```jql
@@ -76,7 +76,7 @@ ORDER BY duedate ASC, priority DESC
 
 This scopes the query to tickets the Director is already tracking — not the entire team's backlog.
 
-**Enrich with project context**: Read active Obsidian project notes from `Work/Projects/` that are relevant to what surfaced. Project notes live at `Work/Projects/[ProjectName]/[ProjectName].md`. Use them to add context — e.g. whether a blocker connects to a known risk, whether a deadline slip affects a milestone.
+**Enrich with project context**: Read active Obsidian project notes from `~/Documents/obsidian/My Note/Projects/` that are relevant to what surfaced. Project notes live at `~/Documents/obsidian/My Note/Projects/[ProjectName]/[ProjectName].md`. Use `Read` to load them. Use them to add context — e.g. whether a blocker connects to a known risk, whether a deadline slip affects a milestone.
 
 **Goal**: Give the user two things — (1) a clear list of tickets that need their immediate action (reassign/decide), and (2) a Director-level view of project health: what's blocked, what's at risk, what needs them to go communicate or escalate with the team or external parties.
 
